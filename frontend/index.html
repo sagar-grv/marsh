@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full bg-slate-50">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Marsh Pitch Intelligence | Corporate Health & Risk Placement</title>
+  
+  <!-- Google Fonts: Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  
+  <!-- FontAwesome 6 CDN -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+          },
+          colors: {
+            marsh: {
+              navy: '#00205B',
+              navyHover: '#00143D',
+              border: '#E2E8F0',
+              bg: '#F8FAFC',
+              textMain: '#0F172A',
+              textMuted: '#475569'
+            }
+          }
+        }
+      }
+    }
+  </script>
+  
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body class="h-full flex flex-col font-sans text-slate-900 bg-[#F8FAFC] antialiased">
+
+  <!-- 1. Top Enterprise Navigation Bar -->
+  <header class="bg-white border-b border-slate-200 sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-14 flex items-center justify-between">
+      <div class="flex items-center space-x-3">
+        <span class="text-sm font-bold tracking-tight text-[#00205B] uppercase">
+          Marsh Pitch Intelligence
+        </span>
+        <span class="text-slate-300">|</span>
+        <span class="text-xs text-slate-500 font-medium hidden sm:inline">
+          Enterprise Placement Platform & Compliance Verifier
+        </span>
+      </div>
+      
+      <div class="flex items-center space-x-4">
+        <div class="flex items-center text-xs font-medium text-slate-600">
+          <span class="w-2 h-2 rounded-full bg-emerald-500 mr-2"></span>
+          System Status: Online
+        </div>
+        <span class="text-slate-200">|</span>
+        <span class="text-xs font-mono text-slate-500">v2.0-bge-large</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- Error Alert Banner -->
+  <div id="error-banner" class="hidden bg-rose-50 border-b border-rose-200 text-rose-800 px-4 py-2.5 text-xs flex items-center justify-between">
+    <div class="flex items-center space-x-2">
+      <i class="fa-solid fa-circle-exclamation text-rose-500"></i>
+      <span id="error-message">System error notice</span>
+    </div>
+    <button onclick="dismissError()" class="text-rose-500 hover:text-rose-700 font-bold">&times;</button>
+  </div>
+
+  <!-- 2. Dense Corporate Workspace Grid -->
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5 flex-1 w-full grid grid-cols-1 lg:grid-cols-12 gap-5">
+    
+    <!-- LEFT SIDEBAR: Configuration Panel -->
+    <aside class="lg:col-span-4 space-y-4">
+      <div class="bg-white rounded-md border border-slate-200 p-5 space-y-4 shadow-none">
+        <div class="border-b border-slate-100 pb-2.5 flex items-center justify-between">
+          <h2 class="text-xs font-bold text-slate-900 uppercase tracking-wider">
+            Client Configuration
+          </h2>
+          <span class="text-[10px] font-mono text-slate-500 uppercase bg-slate-100 px-1.5 py-0.5 rounded">
+            Config
+          </span>
+        </div>
+
+        <form id="generator-form" class="space-y-4">
+          <!-- Company Name Input -->
+          <div>
+            <label for="company-name" class="block text-[11px] font-semibold text-slate-700 uppercase tracking-wider mb-1">
+              Client Company Name
+            </label>
+            <input 
+              type="text" 
+              id="company-name" 
+              value="Tata Consultancy Services" 
+              required
+              class="w-full px-3 py-2 text-xs rounded-md border border-slate-300 focus:outline-none focus:ring-1 focus:ring-[#00205B] focus:border-[#00205B] text-slate-900 bg-white"
+            />
+            <p class="text-[10px] text-slate-500 mt-1">Direct web profiling with Actuarial LLM fallback.</p>
+          </div>
+
+          <!-- Model Engine Dropdown -->
+          <div>
+            <label for="llm-provider" class="block text-[11px] font-semibold text-slate-700 uppercase tracking-wider mb-1">
+              Reasoning Engine
+            </label>
+            <select 
+              id="llm-provider" 
+              class="w-full px-3 py-2 text-xs rounded-md border border-slate-300 bg-white text-slate-900 focus:outline-none focus:ring-1 focus:ring-[#00205B]"
+            >
+              <option value="Groq (Llama 3.3 70B)" selected>Groq (Llama 3.3 70B / Ultra-Fast)</option>
+              <option value="OpenAI (gpt-4o-mini)">OpenAI (gpt-4o-mini)</option>
+            </select>
+          </div>
+
+          <!-- Baseline Policy Documents -->
+          <div>
+            <div class="flex items-center justify-between mb-1">
+              <label class="block text-[11px] font-semibold text-slate-700 uppercase tracking-wider">
+                Grounded Brochures
+              </label>
+              <span id="doc-counter" class="text-[10px] font-mono text-slate-500">4 / 4 Active</span>
+            </div>
+            
+            <div id="documents-list" class="space-y-1.5 bg-slate-50 p-2.5 rounded-md border border-slate-200 max-h-48 overflow-y-auto">
+              <div class="text-xs text-slate-400 py-1 text-center font-mono">Loading document catalogue...</div>
+            </div>
+          </div>
+
+          <!-- Action Button: Sharp, Solid Navy, Zero Slop -->
+          <button 
+            type="submit" 
+            id="generate-btn"
+            class="w-full bg-[#00205B] hover:bg-[#00143D] text-white font-medium py-2.5 px-4 rounded-md transition duration-150 flex items-center justify-center space-x-2 text-xs uppercase tracking-wider disabled:opacity-50"
+          >
+            <span id="btn-text">Run Multi-Agent Placement</span>
+            <svg id="btn-spinner" class="hidden animate-spin h-3.5 w-3.5 text-white" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+            </svg>
+          </button>
+        </form>
+      </div>
+
+      <!-- Compliance Architecture Info Card -->
+      <div class="bg-white rounded-md border border-slate-200 p-4 space-y-2">
+        <h3 class="text-xs font-bold text-slate-900 uppercase tracking-wider">
+          Compliance & Hallucination Guard
+        </h3>
+        <p class="text-xs text-slate-600 leading-normal">
+          The Auditor Agent decouples <strong>statutory policy provisions</strong> from <strong>consulting risk mappings</strong>. Only missing features or fabricated limits are flagged.
+        </p>
+      </div>
+    </aside>
+
+    <!-- RIGHT MAIN CONTENT: Dense Data Dashboard -->
+    <main class="lg:col-span-8 space-y-4">
+      
+      <!-- Welcome Empty State -->
+      <div id="empty-state" class="bg-white rounded-md border border-slate-200 p-10 text-center space-y-3">
+        <div class="w-10 h-10 rounded-md bg-slate-100 border border-slate-200 text-slate-600 flex items-center justify-center mx-auto text-sm">
+          <i class="fa-solid fa-terminal"></i>
+        </div>
+        <h3 class="text-sm font-bold text-slate-900 uppercase tracking-wide">Awaiting Placement Execution</h3>
+        <p class="text-xs text-slate-500 max-w-sm mx-auto leading-relaxed">
+          Specify a client company and click <strong>Run Multi-Agent Placement</strong> to initiate BGE-large semantic retrieval, risk modeling, and compliance verification.
+        </p>
+      </div>
+
+      <!-- Skeleton Loading State -->
+      <div id="loading-state" class="hidden space-y-4">
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          <div class="bg-white rounded-md border border-slate-200 p-4 space-y-2 animate-pulse">
+            <div class="h-2.5 bg-slate-200 rounded w-2/3"></div>
+            <div class="h-6 bg-slate-200 rounded w-1/2"></div>
+            <div class="h-1 bg-slate-200 rounded w-full"></div>
+          </div>
+          <div class="bg-white rounded-md border border-slate-200 p-4 space-y-2 animate-pulse">
+            <div class="h-2.5 bg-slate-200 rounded w-2/3"></div>
+            <div class="h-6 bg-slate-200 rounded w-1/3"></div>
+          </div>
+          <div class="bg-white rounded-md border border-slate-200 p-4 space-y-2 animate-pulse">
+            <div class="h-2.5 bg-slate-200 rounded w-2/3"></div>
+            <div class="h-6 bg-slate-200 rounded w-1/3"></div>
+          </div>
+          <div class="bg-white rounded-md border border-slate-200 p-4 space-y-2 animate-pulse">
+            <div class="h-2.5 bg-slate-200 rounded w-2/3"></div>
+            <div class="h-6 bg-slate-200 rounded w-1/3"></div>
+          </div>
+        </div>
+
+        <div class="bg-white rounded-md border border-slate-200 p-8 space-y-4 text-center animate-pulse">
+          <div class="w-8 h-8 rounded-full border-2 border-slate-400 border-t-[#00205B] animate-spin mx-auto"></div>
+          <div class="space-y-1">
+            <h4 class="text-xs font-bold text-slate-800 uppercase tracking-wider">Executing Multi-Agent Pipeline</h4>
+            <p class="text-xs text-slate-500">Querying BAAI/bge-large-en-v1.5 vector store & fact-checking policy claims...</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Results Container -->
+      <div id="results-container" class="hidden space-y-4">
+
+        <!-- Dense KPI Metrics Cards -->
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          <!-- Card 1: Confidence -->
+          <div class="bg-white rounded-md border border-slate-200 p-3.5 flex flex-col justify-between">
+            <span class="text-[10px] font-bold uppercase tracking-wider text-slate-500">Audit Confidence</span>
+            <div class="my-1.5 flex items-baseline gap-2">
+              <span id="kpi-confidence" class="text-2xl font-bold text-slate-900 tracking-tight">0%</span>
+              <span id="kpi-confidence-status" class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-200 uppercase">PASS</span>
+            </div>
+            <div class="w-full bg-slate-100 rounded-none h-1 overflow-hidden">
+              <div id="kpi-progress" class="bg-emerald-600 h-1" style="width: 0%"></div>
+            </div>
+          </div>
+
+          <!-- Card 2: Total Claims Audited -->
+          <div class="bg-white rounded-md border border-slate-200 p-3.5 flex flex-col justify-between">
+            <span class="text-[10px] font-bold uppercase tracking-wider text-slate-500">Claims Audited</span>
+            <div class="my-1.5">
+              <span id="kpi-total-claims" class="text-2xl font-bold text-slate-900 tracking-tight">0</span>
+              <span class="text-xs text-slate-400 ml-1">items</span>
+            </div>
+            <span class="text-[10px] text-slate-400 font-mono">Slide 3 & 4 policy terms</span>
+          </div>
+
+          <!-- Card 3: Verified Claims -->
+          <div class="bg-white rounded-md border border-slate-200 p-3.5 flex flex-col justify-between">
+            <span class="text-[10px] font-bold uppercase tracking-wider text-slate-500">Verified Claims</span>
+            <div class="my-1.5">
+              <span id="kpi-verified-claims" class="text-2xl font-bold text-emerald-700 tracking-tight">0</span>
+              <span class="text-xs text-slate-400 ml-1">passed</span>
+            </div>
+            <span class="text-[10px] text-emerald-700 font-mono">Brochure aligned</span>
+          </div>
+
+          <!-- Card 4: Flagged Claims -->
+          <div class="bg-white rounded-md border border-slate-200 p-3.5 flex flex-col justify-between">
+            <span class="text-[10px] font-bold uppercase tracking-wider text-slate-500">Flagged Mismatches</span>
+            <div class="my-1.5">
+              <span id="kpi-flagged-claims" class="text-2xl font-bold text-rose-700 tracking-tight">0</span>
+              <span class="text-xs text-slate-400 ml-1">flags</span>
+            </div>
+            <span class="text-[10px] text-slate-400 font-mono">Zero ungrounded</span>
+          </div>
+        </div>
+
+        <!-- Strict Corporate Tabbed View -->
+        <div class="bg-white rounded-md border border-slate-200 overflow-hidden">
+          <div class="border-b border-slate-200 bg-white px-3 flex flex-wrap gap-1 text-xs font-semibold">
+            <button onclick="switchTab('summary')" id="tab-btn-summary" class="tab-btn active py-2.5 px-3 flex items-center gap-1.5 text-slate-700 hover:text-slate-900">
+              Executive Summary
+            </button>
+            <button onclick="switchTab('pitch')" id="tab-btn-pitch" class="tab-btn py-2.5 px-3 flex items-center gap-1.5 text-slate-500 hover:text-slate-900">
+              Pitch Deck
+            </button>
+            <button onclick="switchTab('audit')" id="tab-btn-audit" class="tab-btn py-2.5 px-3 flex items-center gap-1.5 text-slate-500 hover:text-slate-900">
+              Compliance Audit Matrix
+            </button>
+            <button onclick="switchTab('rag')" id="tab-btn-rag" class="tab-btn py-2.5 px-3 flex items-center gap-1.5 text-slate-500 hover:text-slate-900">
+              RAG Grounding Evidence
+            </button>
+            <button onclick="switchTab('downloads')" id="tab-btn-downloads" class="tab-btn py-2.5 px-3 flex items-center gap-1.5 text-slate-500 hover:text-slate-900">
+              Export Hub
+            </button>
+          </div>
+
+          <div class="p-5">
+            
+            <!-- PANEL 1: EXECUTIVE SUMMARY -->
+            <div id="tab-content-summary" class="tab-panel space-y-4">
+              <div class="border-b border-slate-100 pb-2 flex justify-between items-center">
+                <h3 class="text-xs font-bold uppercase tracking-wider text-slate-900" id="summary-company-title">
+                  Company Profile
+                </h3>
+                <span id="summary-meta" class="text-[10px] font-mono text-slate-500">Corporate Assessment</span>
+              </div>
+
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div class="bg-slate-50 rounded-md p-3 border border-slate-200">
+                  <span class="text-[10px] font-semibold uppercase text-slate-500 tracking-wider">Industry</span>
+                  <p id="summary-industry" class="text-xs font-semibold text-slate-800 mt-0.5">Information Technology</p>
+                </div>
+                <div class="bg-slate-50 rounded-md p-3 border border-slate-200">
+                  <span class="text-[10px] font-semibold uppercase text-slate-500 tracking-wider">Workforce Scale</span>
+                  <p id="summary-size" class="text-xs font-semibold text-slate-800 mt-0.5">Enterprise Scale</p>
+                </div>
+              </div>
+
+              <div>
+                <span class="text-[10px] font-semibold uppercase text-slate-500 tracking-wider block mb-2">
+                  Identified Occupational Health Hazards
+                </span>
+                <div id="summary-risks" class="flex flex-wrap gap-1.5">
+                  <!-- Risk badges injected -->
+                </div>
+              </div>
+
+              <div class="bg-slate-50 border border-slate-200 rounded-md p-3.5 space-y-1">
+                <span class="text-[10px] font-bold text-slate-900 uppercase tracking-wider block">
+                  Actuarial Placement Narrative
+                </span>
+                <p id="summary-audit-text" class="text-xs text-slate-700 leading-relaxed"></p>
+              </div>
+            </div>
+
+            <!-- PANEL 2: PITCH DECK SLIDES -->
+            <div id="tab-content-pitch" class="tab-panel hidden space-y-4">
+              <div class="flex items-center justify-between border-b border-slate-100 pb-2">
+                <h3 class="text-xs font-bold uppercase tracking-wider text-slate-900">4-Slide Executive Pitch Deck</h3>
+                <span class="text-[10px] font-mono text-slate-500">Consulting Format</span>
+              </div>
+              <div id="slides-container" class="space-y-3">
+                <!-- Slides injected -->
+              </div>
+            </div>
+
+            <!-- PANEL 3: COMPLIANCE AUDIT MATRIX (TABLE FORMAT) -->
+            <div id="tab-content-audit" class="tab-panel hidden space-y-4">
+              <div class="flex items-center justify-between border-b border-slate-100 pb-2">
+                <div>
+                  <h3 class="text-xs font-bold uppercase tracking-wider text-slate-900">Policy Compliance Verification Matrix</h3>
+                  <p class="text-[11px] text-slate-500">Brochure grounding and terms validation</p>
+                </div>
+                <span id="audit-deck-conf-badge" class="px-2 py-0.5 text-xs font-mono font-bold rounded bg-slate-100 text-slate-800 border border-slate-200">
+                  Confidence: 0%
+                </span>
+              </div>
+
+              <!-- DENSE DATA TABLE (NO FLOATING CARDS) -->
+              <div class="border border-slate-200 rounded-md overflow-x-auto">
+                <table class="w-full text-left border-collapse text-xs">
+                  <thead>
+                    <tr class="bg-slate-100 text-slate-700 border-b border-slate-200 font-semibold text-[10px] uppercase tracking-wider">
+                      <th class="py-2 px-3 w-24">STATUS</th>
+                      <th class="py-2 px-3 w-40">CORE FEATURE</th>
+                      <th class="py-2 px-3">CLAIM EXTRACTED</th>
+                      <th class="py-2 px-3">EVIDENCE & RATIONALE</th>
+                      <th class="py-2 px-3 w-36">SOURCE</th>
+                    </tr>
+                  </thead>
+                  <tbody id="claims-table-body" class="divide-y divide-slate-200 text-slate-700">
+                    <!-- Table rows dynamically populated -->
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- PANEL 4: RAG EVIDENCE -->
+            <div id="tab-content-rag" class="tab-panel hidden space-y-4">
+              <div class="border-b border-slate-100 pb-2">
+                <h3 class="text-xs font-bold uppercase tracking-wider text-slate-900">RAG Semantic Grounding Passages</h3>
+                <p class="text-[11px] text-slate-500">Vector chunks retrieved via BAAI/bge-large-en-v1.5</p>
+              </div>
+
+              <div id="chunks-container" class="space-y-3">
+                <!-- Chunks injected -->
+              </div>
+            </div>
+
+            <!-- PANEL 5: DOWNLOADS HUB -->
+            <div id="tab-content-downloads" class="tab-panel hidden space-y-4">
+              <div class="border-b border-slate-100 pb-2">
+                <h3 class="text-xs font-bold uppercase tracking-wider text-slate-900">Executive Export Hub</h3>
+                <p class="text-[11px] text-slate-500">Verified placement assets ready for client presentation</p>
+              </div>
+
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <!-- Corporate PDF Card -->
+                <div class="bg-white border border-slate-200 rounded-md p-4 flex flex-col justify-between">
+                  <div>
+                    <span class="text-[10px] font-mono text-emerald-700 uppercase font-semibold bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">
+                      Primary Compliance Asset
+                    </span>
+                    <h4 class="text-xs font-bold text-slate-900 mt-2">Compliance Audit Report (.pdf)</h4>
+                    <p class="text-[11px] text-slate-500 mt-0.5">Corporate report with Marsh Navy banner and claim-by-claim verification table.</p>
+                  </div>
+                  <a id="download-pdf-btn" href="#" download class="mt-3 w-full bg-[#00205B] hover:bg-[#00143D] text-white text-xs font-medium py-2 px-3 rounded-md text-center block transition">
+                    Download Official PDF Report
+                  </a>
+                </div>
+
+                <!-- PPTX Card -->
+                <div class="bg-white border border-slate-200 rounded-md p-4 flex flex-col justify-between">
+                  <div>
+                    <span class="text-[10px] font-mono text-slate-600 uppercase font-semibold bg-slate-100 px-1.5 py-0.5 rounded">
+                      Client Deck
+                    </span>
+                    <h4 class="text-xs font-bold text-slate-900 mt-2">PowerPoint Deck (.pptx)</h4>
+                    <p class="text-[11px] text-slate-500 mt-0.5">16:9 widescreen presentation with anchored text frames and speaker notes.</p>
+                  </div>
+                  <a id="download-pptx-btn" href="#" download class="mt-3 w-full bg-slate-800 hover:bg-slate-900 text-white text-xs font-medium py-2 px-3 rounded-md text-center block transition">
+                    Download Pitch Deck (.pptx)
+                  </a>
+                </div>
+
+                <!-- CSV Card -->
+                <div class="bg-white border border-slate-200 rounded-md p-4 flex flex-col justify-between">
+                  <div>
+                    <span class="text-[10px] font-mono text-slate-600 uppercase font-semibold bg-slate-100 px-1.5 py-0.5 rounded">
+                      Data Matrix
+                    </span>
+                    <h4 class="text-xs font-bold text-slate-900 mt-2">Compliance Audit Spreadsheet (.csv)</h4>
+                    <p class="text-[11px] text-slate-500 mt-0.5">Raw tabular matrix ready for Excel or PowerBI enterprise risk integration.</p>
+                  </div>
+                  <a id="download-csv-btn" href="#" download class="mt-3 w-full border border-slate-300 hover:bg-slate-50 text-slate-800 text-xs font-medium py-2 px-3 rounded-md text-center block transition">
+                    Download Matrix (.csv)
+                  </a>
+                </div>
+
+                <!-- JSON Card -->
+                <div class="bg-white border border-slate-200 rounded-md p-4 flex flex-col justify-between">
+                  <div>
+                    <span class="text-[10px] font-mono text-slate-600 uppercase font-semibold bg-slate-100 px-1.5 py-0.5 rounded">
+                      Machine Readable
+                    </span>
+                    <h4 class="text-xs font-bold text-slate-900 mt-2">Structured Audit Log (.json)</h4>
+                    <p class="text-[11px] text-slate-500 mt-0.5">Full programmatic JSON payload for automated CI compliance pipelines.</p>
+                  </div>
+                  <a id="download-json-btn" href="#" download class="mt-3 w-full border border-slate-300 hover:bg-slate-50 text-slate-800 text-xs font-medium py-2 px-3 rounded-md text-center block transition">
+                    Download Payload (.json)
+                  </a>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="js/app.js"></script>
+</body>
+</html>

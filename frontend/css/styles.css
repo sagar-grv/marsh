@@ -1,0 +1,51 @@
+/* frontend/css/styles.css - Anti-Slop Corporate Enterprise Styling */
+
+/* Typography & Reset */
+body {
+  font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  background-color: #F8FAFC;
+}
+
+/* Tab Navigation */
+.tab-btn {
+  border-bottom: 2px solid transparent;
+  transition: all 0.15s ease-in-out;
+}
+.tab-btn.active {
+  color: #00205B !important;
+  border-bottom-color: #00205B !important;
+  font-weight: 600;
+}
+
+/* Sharp, Flat Slide Container */
+.slide-box {
+  background: #FFFFFF;
+  border: 1px solid #E2E8F0;
+  border-radius: 4px;
+}
+
+/* Simple Bullet Indicator */
+.bullet-marker {
+  width: 5px;
+  height: 5px;
+  background-color: #00205B;
+  border-radius: 50%;
+  margin-top: 0.5rem;
+  flex-shrink: 0;
+}
+
+/* Speaker Notes Accordion */
+.speaker-notes-content {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.25s ease-out;
+}
+.speaker-notes-content.expanded {
+  max-height: 600px;
+  transition: max-height 0.35s ease-in;
+}
+
+/* Clean table striping and hover */
+tbody tr:hover {
+  background-color: #F8FAFC;
+}

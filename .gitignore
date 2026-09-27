@@ -1,0 +1,27 @@
+# Python & Virtual Environments
+venv/
+.venv/
+env/
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# Secrets & Local Configuration
+.env
+*.env.local
+
+# Vector Store / Local DB (Rebuilt via ingest_policies.py)
+marsh_policy_db/
+
+# IDE & OS Files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Temp / Cache
+.pytest_cache/
+.coverage
+htmlcov/
