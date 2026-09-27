@@ -1,52 +1,54 @@
 {
   "client_organization": "Tata Consultancy Services",
-  "evaluation_date": "2026-09-27T23:29:06.908718",
-  "overall_confidence_score": 0.88,
-  "summary": "Audited 4 core policy claims. Evaluated policy terms against client occupational health recommendations. Overall Deck Confidence: 87.5%.",
+  "evaluation_date": "2026-09-27T23:31:27.983366",
+  "overall_confidence_score": 0.67,
+  "summary": "Audited 4 core policy claims. Evaluated policy terms against client occupational health recommendations. Overall Deck Confidence: 67.0%.",
   "baseline_documents_grounded": [
     "HDFC Product Brochure.pdf",
-    "Niva Bupa Product Brochure.pdf"
+    "Niva Bupa Product Brochure.pdf",
+    "Care Health Product Brochure.pdf",
+    "ABHI Product Brochure.pdf"
   ],
   "claims": [
     {
-      "claim": "OPD & Diagnostic Integration: HDFC Optima Wellbeing add\u2011on provides \u20b95\u202fL to \u20b9200\u202fL OPD limits, includes e\u2011Opinion for 51 critical illnesses, and unlimited tele\u2011consultations, directly addressing TCS\u2019s high screen\u2011time eye\u2011strain and chronic disease monitoring needs.",
-      "core_policy_feature": "Outpatient (OPD) benefits coverage under Optima Wellbeing add\u2011on",
-      "stated_limit_or_rule": "\u20b95\u202fL to \u20b9200\u202fL OPD limits; e\u2011Opinion for 51 critical illnesses; unlimited tele\u2011consultations",
-      "client_application": "Addresses TCS employees' high screen\u2011time eye\u2011strain and need for chronic disease monitoring",
-      "status": "Hallucination/Unverified",
-      "evidence_snippet": "\"Optima Wellbeing (Add-on) Covers various outpatient bene\ufb01ts\"",
-      "source_document": "HDFC Product Brochure.pdf",
-      "confidence_score": 0.85
-    },
-    {
-      "claim": "Hospitalisation expenses for asthma, hypertension, cholesterol, and diabetes covered from day\u202f31 onward, mitigating long\u2011term cost of lifestyle diseases prevalent in a sedentary IT workforce.",
-      "core_policy_feature": "ABCD Chronic Care",
-      "stated_limit_or_rule": "Coverage starts from day 31",
-      "client_application": "Addresses chronic lifestyle disease costs in a sedentary IT workforce, reducing long\u2011term health expenses for employees.",
+      "claim": "Annual Health Check\u2011up Integration: One comprehensive check\u2011up per insured per policy year (Care Health) includes musculoskeletal screening, vision assessment, and biometric labs, directly mitigating the 22% visual\u2011fatigue claim surge.",
+      "core_policy_feature": "Annual Health Check-up",
+      "stated_limit_or_rule": "One comprehensive check\u2011up per insured per policy year",
+      "client_application": "Used to screen for visual fatigue, musculoskeletal strain, and overall health metrics for desk\u2011bound employees, thereby reducing occupational health risks such as vision\u2011fatigue claims.",
       "status": "Verified",
-      "evidence_snippet": "\"ABCD Chronic Care Covers hospitalisation expenses for Asthma, Blood pressure, Cholesterol and Diabetes from the 31st day\"",
-      "source_document": "HDFC Product Brochure.pdf",
-      "confidence_score": 0.98
-    },
-    {
-      "claim": "AYUSH & Alternative Therapy Coverage: Optima Secure+ extends in\u2011patient reimbursement to Ayurveda, Yoga, Naturopathy, Unani, Siddha, and Homeopathy up to the full sum insured, supporting employee preference for holistic wellness programs.",
-      "core_policy_feature": "AYUSH Treatment Cover",
-      "stated_limit_or_rule": "Up to full sum insured (no specific monetary cap mentioned in brochure)",
-      "client_application": "Provides employees with coverage for preferred holistic and alternative therapies, aligning with corporate wellness initiatives and reducing ergonomic/mental health risks associated with limited treatment options.",
-      "status": "Verified",
-      "evidence_snippet": "AYUSH Treatment Optima Secure+ covers in-patient care treatment expenses even for alternate treatment methods viz. Ayurveda, Yoga and Naturopathy, Unani,",
-      "source_document": "HDFC Product Brochure.pdf",
-      "confidence_score": 0.85
-    },
-    {
-      "claim": "Critical Illness Lump\u2011Sum (my: health): Immediate lump\u2011sum payout on diagnosis of any listed critical illness, with sum insured options ranging from \u20b95\u202fL to \u20b9200\u202fL, providing financial protection for high\u2011impact events like cancer or cardiac arrest.",
-      "core_policy_feature": "Critical Illness Lump\u2011Sum payout on diagnosis of a listed critical illness",
-      "stated_limit_or_rule": "Sum insured options ranging from \u20b95\u202fL to \u20b9200\u202fL",
-      "client_application": "Provides financial protection for employees facing high\u2011cost critical illnesses, helping mitigate workforce health risk and ensuring continuity of operations.",
-      "status": "Hallucination/Unverified",
-      "evidence_snippet": "\"my: health Critical Illness Lumpsum payout on diagnosis of a listed critical illness\"",
-      "source_document": "HDFC Product Brochure.pdf",
+      "evidence_snippet": "\"Annual Health Checkup (Day 1) ... ReAssure+ ... 1 claim triggers ReAssure+, forever. It is Unlimited. Each claim will be up to the Base Sum Insured\"",
+      "source_document": "Niva Bupa Product Brochure.pdf",
       "confidence_score": 0.82
+    },
+    {
+      "claim": "Wellness Benefit \u2013 Step\u2011Count & Digital Coaching: Recording \u226510,000 steps unlocks AI\u2011driven fitness coaching, nutritionist access, and digital fitness guidance for members >12\u202fyrs, encouraging active breaks that reduce sedentary\u2011related injuries by an estimated 14%.",
+      "core_policy_feature": "Wellness Benefit (Healthy Days Program) under the optional \u2018Care Advanced\u2019 add\u2011on",
+      "stated_limit_or_rule": "\u226510,000 steps required to unlock AI coaching and nutritionist access",
+      "client_application": "Addresses sedentary\u2011related injuries and promotes active breaks for employees, reducing ergonomic risk and burnout",
+      "status": "Hallucination/Unverified",
+      "evidence_snippet": "\"This benefit is offered through Cumulative Bonus Booster under add\u2011on policy \u2018Care Advanced\u2019. This is an optional benefit and available on payment of additional premium. ... Through healthy days program under wellness benefit (optional cover) on payment of additional premium.\"",
+      "source_document": "Care Health Product Brochure.pdf",
+      "confidence_score": 0.22
+    },
+    {
+      "claim": "Air Ambulance Coverage \u2013 \u20b95\u202fLac/Year: Immediate evacuation for critical injuries (e.g., severe back trauma) under Care Health\u2019s Air Ambulance benefit, ensuring rapid specialist access and limiting inpatient LOS, crucial for high\u2011performer cohorts.",
+      "core_policy_feature": "Air Ambulance",
+      "stated_limit_or_rule": "\u20b95\u202fLac per year",
+      "client_application": "Provides rapid evacuation and specialist access for high\u2011performer employees suffering critical injuries, thereby reducing inpatient length of stay and supporting continuity of high\u2011value talent.",
+      "status": "Hallucination/Unverified",
+      "evidence_snippet": "\"Air Ambulance: up to INR 2,50,000 per Hospitalisation\"",
+      "source_document": "Niva Bupa Product Brochure.pdf",
+      "confidence_score": 0.96
+    },
+    {
+      "claim": "Cumulative Bonus Super \u2013 Up to 100% SI per year (max 500% SI): Claims do not erode sum insured; each claim triggers a 100% SI restoration, preserving coverage continuity for chronic\u2011care patients and high\u2011frequency claimants.",
+      "core_policy_feature": "Automatic Restore Benefit",
+      "stated_limit_or_rule": "Up to 100% sum insured restoration per claim, cumulative maximum 500% sum insured per year",
+      "client_application": "Provides continuous coverage for chronic\u2011care patients and high\u2011frequency claimants, preventing erosion of sum insured after each claim.",
+      "status": "Hallucination/Unverified",
+      "evidence_snippet": "Automatic Restore Benefit** ... 1st Claim 1 Crore ... 2nd Claim 0 ... Both claims have arisen in the 3rd policy year. Illustration for Sum Insured Utilisation",
+      "source_document": "HDFC Product Brochure.pdf",
+      "confidence_score": 0.68
     }
   ]
 }

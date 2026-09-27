@@ -427,6 +427,29 @@ def generate_pitch(req: GenerateRequest):
         with open(json_path, "w", encoding="utf-8") as f:
             json.dump(json_payload, f, indent=2)
 
+        # Render Markdown Audit Report
+        md_filename = f"Audit_Report_{safe_slug}.md"
+        md_path = OUTPUTS_DIR / md_filename
+        with open(md_path, "w", encoding="utf-8") as f:
+            f.write(f"# Marsh Risk Advisory - Compliance & Hallucination Audit Report\n\n")
+            f.write(f"**Client Organization:** {company_name}  \n")
+            f.write(f"**Evaluation Date:** {datetime.now().strftime('%B %d, %Y')}  \n")
+            f.write(f"**Overall Deck Confidence Score:** {audit_report.deck_confidence_score * 100:.1f}%  \n")
+            f.write(f"**Baseline Documents Grounded:** {', '.join(selected_docs)}  \n\n---\n\n")
+            f.write(f"## 1. Executive Compliance Summary\n{audit_report.summary}\n\n")
+            verdict = "PASS - COMPLIANT" if audit_report.deck_confidence_score >= 0.70 else "REVIEW REQUIRED"
+            f.write(f"**Compliance Verdict:** {verdict}\n\n---\n\n")
+            f.write(f"## 2. Claim-by-Claim Verification Breakdown\n\n")
+            for i, c in enumerate(audit_report.claims, 1):
+                status_badge = "[PASS] VERIFIED" if "Verified" in c.status else "[FLAGGED] HALLUCINATION/UNVERIFIED"
+                f.write(f"### Claim {i}: {status_badge} (Confidence: {c.confidence_score:.2f})\n")
+                f.write(f"- **Original Pitch Claim:** \"{c.claim}\"\n")
+                f.write(f"- **Core Policy Feature:** `{c.core_policy_feature}`\n")
+                f.write(f"- **Stated Limit or Rule:** `{c.stated_limit_or_rule}`\n")
+                f.write(f"- **Client Application / Risk Mapping:** `{c.client_application}`\n")
+                f.write(f"- **Policy Brochure Citation:** `{c.source_document}`\n")
+                f.write(f"- **Auditor Evidence & Rationale:**\n  > {c.evidence_snippet.strip()}\n\n")
+
         # Render Corporate PDF Audit Report
         generate_audit_pdf(audit_report, company_name, selected_docs, str(pdf_path))
 
