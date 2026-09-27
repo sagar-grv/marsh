@@ -103,7 +103,13 @@ python ingest_policies.py
 ```
 
 ### 3. Launch the Application
-Start the FastAPI server:
+You can launch the entire platform with a single click using the included Windows batch script:
+
+```cmd
+start.bat
+```
+
+Or manually via your terminal:
 
 ```powershell
 python server.py
