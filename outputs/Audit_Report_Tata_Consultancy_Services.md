@@ -1,54 +1,45 @@
 # Marsh Risk Advisory - Compliance & Hallucination Audit Report
 
 **Client Organization:** Tata Consultancy Services  
-**Evaluation Date:** September 27, 2026  
-**Overall Deck Confidence Score:** 64.0%  
-**Baseline Documents Grounded:** Niva Bupa Product Brochure.pdf, Care Health Product Brochure.pdf  
+**Evaluation Date:** September 28, 2026  
+**Overall Deck Confidence Score:** 65.0%  
+**Baseline Documents Grounded:** HDFC Product Brochure.pdf, Niva Bupa Product Brochure.pdf, Care Health Product Brochure.pdf, ABHI Product Brochure.pdf  
 
 ---
 
 ## 1. Executive Compliance Summary
-Audited 4 core policy claims. Evaluated policy terms against client occupational health recommendations. Overall Deck Confidence: 63.7%.
+Audited 3 core policy claims. Evaluated policy terms against client occupational health recommendations. Overall Deck Confidence: 64.7%.
 
-**Compliance Verdict:** REVIEW REQUIRED - Potential Policy Term Mismatches
+**Compliance Verdict:** REVIEW REQUIRED
 
 ---
 
 ## 2. Claim-by-Claim Verification Breakdown
 
-### Claim 1: [FLAGGED] HALLUCINATION/UNVERIFIED (Confidence: 0.65)
-- **Original Pitch Claim:** "Annual Health Check‑up (once per insured per year) – early detection of cardiovascular & metabolic issues"
-- **Core Policy Feature:** `Annual Health Check-up`
-- **Stated Limit or Rule:** `once per insured per year`
-- **Client Application / Risk Mapping:** `used for early detection of cardiovascular and metabolic conditions, helping mitigate occupational health risks associated with sedentary work and chronic disease prevalence among corporate employees`
-- **Policy Brochure Citation:** `Niva Bupa Product Brochure.pdf`
-- **Auditor Evidence & Rationale:**
-  > "Annual Health Checkup (Day 1) ReAssure+ ... 1 claim triggers ReAssure+, forever. It is Unlimited. Each claim will be up to the Base Sum Insured"
-
-### Claim 2: [FLAGGED] HALLUCINATION/UNVERIFIED (Confidence: 0.86)
-- **Original Pitch Claim:** "Wellness Bonus: 10,000+ steps, digital/AI fitness coaching, nutritionist access – combats sedentary lifestyle"
-- **Core Policy Feature:** `Wellness Benefit (Healthy Days Program) under Cumulative Bonus Booster`
-- **Stated Limit or Rule:** `10,000+ steps`
-- **Client Application / Risk Mapping:** `addresses sedentary lifestyle and promotes activity for desk‑bound employees`
+### Claim 1: [PASS] VERIFIED (Confidence: 0.86)
+- **Original Pitch Claim:** "Implement a tiered resilience program delivering quarterly stress‑management workshops, targeting 80% participation, projected to cut burnout incidence by 12% and reduce claim costs by INR 150 million within 18 months."
+- **Core Policy Feature:** `Wellness Benefit – Healthy Days Program (optional cover)`
+- **Stated Limit or Rule:** `Standard terms (no explicit monetary limit specified in brochure)`
+- **Client Application / Risk Mapping:** `Addresses employee burnout and stress, enhancing resilience and reducing health‑related claim costs`
 - **Policy Brochure Citation:** `Care Health Product Brochure.pdf`
 - **Auditor Evidence & Rationale:**
-  > "This benefit is offered through Cumulative Bonus Booster under add‑on policy ‘Care Advanced’. ... Through healthy days program under wellness benefit (optional cover) on payment of additional premium."
+  > "Through healthy days program under wellness benefit (optional cover) on payment of additional premium."
 
-### Claim 3: [FLAGGED] HALLUCINATION/UNVERIFIED (Confidence: 0.22)
-- **Original Pitch Claim:** "Instant Cover for Hypertension, Diabetes, Hyperlipidaemia, Asthma – mitigates chronic disease risk after 30‑day wait"
-- **Core Policy Feature:** `ReAssure+ Benefit`
-- **Stated Limit or Rule:** `30‑day waiting period`
-- **Client Application / Risk Mapping:** `Provides immediate coverage for chronic conditions (hypertension, diabetes, hyperlipidaemia, asthma) to reduce occupational health risk among employees`
-- **Policy Brochure Citation:** `Niva Bupa Product Brochure.pdf`
+### Claim 2: [FLAGGED] HALLUCINATION/UNVERIFIED (Confidence: 0.12)
+- **Original Pitch Claim:** "Introduce flexible project staffing buffers of 10% capacity and enforce maximum 45‑hour weeks, aligning with industry best‑practice, expected to lower overtime‑related stress metrics by 18% and improve delivery timelines."
+- **Core Policy Feature:** `Not found in brochure`
+- **Stated Limit or Rule:** `10% staffing buffer; maximum 45‑hour work weeks`
+- **Client Application / Risk Mapping:** `Intended to reduce overtime‑related stress and improve project delivery timelines`
+- **Policy Brochure Citation:** `HDFC Product Brochure.pdf`
 - **Auditor Evidence & Rationale:**
-  > The brochure excerpt mentions ReAssure+ as a benefit where a single claim under the ReAssure+ bucket will be paid up to the base sum insured, but it does not specify instant cover for chronic diseases nor a 30‑day waiting period. It only lists a minimum 48‑hour continuous hospitalisation requirement.
+  > The brochure excerpt discusses age‑based eligibility for a one‑time option, home health care cashless availability, and daily cash benefits. It contains no reference to staffing buffers, work‑hour limits, or stress‑reduction measures.
 
-### Claim 4: [PASS] VERIFIED (Confidence: 0.82)
-- **Original Pitch Claim:** "AYUSH & Home‑care coverage up to 100% SI – supports holistic recovery for travel‑related ailments"
-- **Core Policy Feature:** `AYUSH Cover (including Home‑care)`
-- **Stated Limit or Rule:** `Up to 100% of Sum Insured (SI)`
-- **Client Application / Risk Mapping:** `Provides holistic recovery options for employees who travel frequently, mitigating travel‑related health risks through AYUSH and home‑care services`
-- **Policy Brochure Citation:** `Niva Bupa Product Brochure.pdf`
+### Claim 3: [FLAGGED] HALLUCINATION/UNVERIFIED (Confidence: 0.96)
+- **Original Pitch Claim:** "Partner with Marsh to design a customized mental‑health insurance rider covering up to INR 2 million per claim, with no waiting period, incentivizing early intervention and reducing long‑term disability exposure."
+- **Core Policy Feature:** `Mental Health Insurance Rider`
+- **Stated Limit or Rule:** `Up to INR 2 million per claim, no waiting period`
+- **Client Application / Risk Mapping:** `Provides mental‑health coverage to mitigate occupational stress and reduce long‑term disability risk for employees`
+- **Policy Brochure Citation:** `HDFC Product Brochure.pdf`
 - **Auditor Evidence & Rationale:**
-  > Minimum 24 hours of hospitalisation required for AYUSH treatment in an AYUSH Hospital.
+  > The HDFC brochure lists add‑ons such as Optima Wellbeing (outpatient benefits), Individual Personal Accident Rider, ABCD Chronic Care, and Critical Illness, but does not mention any mental‑health rider or a 2 million INR limit.
 

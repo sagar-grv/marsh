@@ -1,8 +1,8 @@
 {
   "client_organization": "Tata Consultancy Services",
-  "evaluation_date": "2026-09-27T23:31:27.983366",
-  "overall_confidence_score": 0.67,
-  "summary": "Audited 4 core policy claims. Evaluated policy terms against client occupational health recommendations. Overall Deck Confidence: 67.0%.",
+  "evaluation_date": "2026-09-28T08:17:59.193279",
+  "overall_confidence_score": 0.65,
+  "summary": "Audited 3 core policy claims. Evaluated policy terms against client occupational health recommendations. Overall Deck Confidence: 64.7%.",
   "baseline_documents_grounded": [
     "HDFC Product Brochure.pdf",
     "Niva Bupa Product Brochure.pdf",
@@ -11,44 +11,34 @@
   ],
   "claims": [
     {
-      "claim": "Annual Health Check\u2011up Integration: One comprehensive check\u2011up per insured per policy year (Care Health) includes musculoskeletal screening, vision assessment, and biometric labs, directly mitigating the 22% visual\u2011fatigue claim surge.",
-      "core_policy_feature": "Annual Health Check-up",
-      "stated_limit_or_rule": "One comprehensive check\u2011up per insured per policy year",
-      "client_application": "Used to screen for visual fatigue, musculoskeletal strain, and overall health metrics for desk\u2011bound employees, thereby reducing occupational health risks such as vision\u2011fatigue claims.",
+      "claim": "Implement a tiered resilience program delivering quarterly stress\u2011management workshops, targeting 80% participation, projected to cut burnout incidence by 12% and reduce claim costs by INR 150\u202fmillion within 18 months.",
+      "core_policy_feature": "Wellness Benefit \u2013 Healthy Days Program (optional cover)",
+      "stated_limit_or_rule": "Standard terms (no explicit monetary limit specified in brochure)",
+      "client_application": "Addresses employee burnout and stress, enhancing resilience and reducing health\u2011related claim costs",
       "status": "Verified",
-      "evidence_snippet": "\"Annual Health Checkup (Day 1) ... ReAssure+ ... 1 claim triggers ReAssure+, forever. It is Unlimited. Each claim will be up to the Base Sum Insured\"",
-      "source_document": "Niva Bupa Product Brochure.pdf",
-      "confidence_score": 0.82
-    },
-    {
-      "claim": "Wellness Benefit \u2013 Step\u2011Count & Digital Coaching: Recording \u226510,000 steps unlocks AI\u2011driven fitness coaching, nutritionist access, and digital fitness guidance for members >12\u202fyrs, encouraging active breaks that reduce sedentary\u2011related injuries by an estimated 14%.",
-      "core_policy_feature": "Wellness Benefit (Healthy Days Program) under the optional \u2018Care Advanced\u2019 add\u2011on",
-      "stated_limit_or_rule": "\u226510,000 steps required to unlock AI coaching and nutritionist access",
-      "client_application": "Addresses sedentary\u2011related injuries and promotes active breaks for employees, reducing ergonomic risk and burnout",
-      "status": "Hallucination/Unverified",
-      "evidence_snippet": "\"This benefit is offered through Cumulative Bonus Booster under add\u2011on policy \u2018Care Advanced\u2019. This is an optional benefit and available on payment of additional premium. ... Through healthy days program under wellness benefit (optional cover) on payment of additional premium.\"",
+      "evidence_snippet": "\"Through healthy days program under wellness benefit (optional cover) on payment of additional premium.\"",
       "source_document": "Care Health Product Brochure.pdf",
-      "confidence_score": 0.22
+      "confidence_score": 0.86
     },
     {
-      "claim": "Air Ambulance Coverage \u2013 \u20b95\u202fLac/Year: Immediate evacuation for critical injuries (e.g., severe back trauma) under Care Health\u2019s Air Ambulance benefit, ensuring rapid specialist access and limiting inpatient LOS, crucial for high\u2011performer cohorts.",
-      "core_policy_feature": "Air Ambulance",
-      "stated_limit_or_rule": "\u20b95\u202fLac per year",
-      "client_application": "Provides rapid evacuation and specialist access for high\u2011performer employees suffering critical injuries, thereby reducing inpatient length of stay and supporting continuity of high\u2011value talent.",
+      "claim": "Introduce flexible project staffing buffers of 10% capacity and enforce maximum 45\u2011hour weeks, aligning with industry best\u2011practice, expected to lower overtime\u2011related stress metrics by 18% and improve delivery timelines.",
+      "core_policy_feature": "Not found in brochure",
+      "stated_limit_or_rule": "10% staffing buffer; maximum 45\u2011hour work weeks",
+      "client_application": "Intended to reduce overtime\u2011related stress and improve project delivery timelines",
       "status": "Hallucination/Unverified",
-      "evidence_snippet": "\"Air Ambulance: up to INR 2,50,000 per Hospitalisation\"",
-      "source_document": "Niva Bupa Product Brochure.pdf",
-      "confidence_score": 0.96
-    },
-    {
-      "claim": "Cumulative Bonus Super \u2013 Up to 100% SI per year (max 500% SI): Claims do not erode sum insured; each claim triggers a 100% SI restoration, preserving coverage continuity for chronic\u2011care patients and high\u2011frequency claimants.",
-      "core_policy_feature": "Automatic Restore Benefit",
-      "stated_limit_or_rule": "Up to 100% sum insured restoration per claim, cumulative maximum 500% sum insured per year",
-      "client_application": "Provides continuous coverage for chronic\u2011care patients and high\u2011frequency claimants, preventing erosion of sum insured after each claim.",
-      "status": "Hallucination/Unverified",
-      "evidence_snippet": "Automatic Restore Benefit** ... 1st Claim 1 Crore ... 2nd Claim 0 ... Both claims have arisen in the 3rd policy year. Illustration for Sum Insured Utilisation",
+      "evidence_snippet": "The brochure excerpt discusses age\u2011based eligibility for a one\u2011time option, home health care cashless availability, and daily cash benefits. It contains no reference to staffing buffers, work\u2011hour limits, or stress\u2011reduction measures.",
       "source_document": "HDFC Product Brochure.pdf",
-      "confidence_score": 0.68
+      "confidence_score": 0.12
+    },
+    {
+      "claim": "Partner with Marsh to design a customized mental\u2011health insurance rider covering up to INR 2\u202fmillion per claim, with no waiting period, incentivizing early intervention and reducing long\u2011term disability exposure.",
+      "core_policy_feature": "Mental Health Insurance Rider",
+      "stated_limit_or_rule": "Up to INR 2\u202fmillion per claim, no waiting period",
+      "client_application": "Provides mental\u2011health coverage to mitigate occupational stress and reduce long\u2011term disability risk for employees",
+      "status": "Hallucination/Unverified",
+      "evidence_snippet": "The HDFC brochure lists add\u2011ons such as Optima Wellbeing (outpatient benefits), Individual Personal Accident Rider, ABCD Chronic Care, and Critical Illness, but does not mention any mental\u2011health rider or a 2\u202fmillion INR limit.",
+      "source_document": "HDFC Product Brochure.pdf",
+      "confidence_score": 0.96
     }
   ]
 }
