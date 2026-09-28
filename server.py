@@ -118,65 +118,106 @@ def generate_audit_csv(audit_report: AuditReport, company_name: str) -> str:
     return buffer.getvalue()
 
 
+def clean_pdf_text(text: str) -> str:
+    """
+    Prevents fpdf crashes from Indian Rupee symbols, smart quotes, dashes,
+    and unhandled Unicode characters.
+    """
+    if not text:
+        return ""
+    replacements = {
+        "₹": "INR ",
+        "’": "'",
+        "‘": "'",
+        "“": '"',
+        "”": '"',
+        "–": "-",
+        "—": "-",
+        "…": "...",
+        "\u200b": "",
+        "\u2011": "-",
+        "\r\n": " ",
+        "\n": " ",
+        "\t": " ",
+    }
+    for k, v in replacements.items():
+        text = text.replace(k, v)
+    # Strip any remaining control chars or invalid sequences
+    return re.sub(r"\s+", " ", text).strip()
+
+
 class MarshAuditPDF(FPDF):
+    def __init__(self):
+        super().__init__(orientation="P", unit="mm", format="A4")
+        self.font_family_name = "Helvetica"
+        self._setup_fonts()
+
+    def _setup_fonts(self):
+        """Attempts to register Windows Arial Unicode TrueType fonts, else falls back to Helvetica."""
+        arial_regular = "C:/Windows/Fonts/arial.ttf"
+        arial_bold = "C:/Windows/Fonts/arialbd.ttf"
+        arial_italic = "C:/Windows/Fonts/ariali.ttf"
+
+        if os.path.exists(arial_regular) and os.path.exists(arial_bold):
+            try:
+                self.add_font("ArialUnicode", "", arial_regular)
+                self.add_font("ArialUnicode", "B", arial_bold)
+                if os.path.exists(arial_italic):
+                    self.add_font("ArialUnicode", "I", arial_italic)
+                self.font_family_name = "ArialUnicode"
+            except Exception as e:
+                logger.warning(f"Could not load system Arial font: {e}. Falling back to standard Helvetica.")
+                self.font_family_name = "Helvetica"
+        else:
+            self.font_family_name = "Helvetica"
+
     def header(self):
-        # Marsh Navy Header
+        # Marsh Navy Header Band on every page: RGB(0, 32, 91)
         self.set_fill_color(0, 32, 91)
-        self.rect(0, 0, 210, 22, 'F')
+        self.rect(0, 0, 210, 24, "F")
         self.set_text_color(255, 255, 255)
-        
-        self.set_font('Helvetica', 'B', 14)
-        self.set_xy(15, 6)
-        self.cell(0, 8, 'MARSH RISK ADVISORY', 0, 1, 'L')
-        
-        self.set_font('Helvetica', '', 9)
-        self.set_xy(15, 13)
-        self.cell(0, 6, 'AI Pitch Compliance Audit Report', 0, 1, 'L')
+
+        # White title
+        self.set_font(self.font_family_name, "B", 14)
+        self.set_xy(15, 5)
+        self.cell(0, 7, "MARSH RISK ADVISORY", 0, 1, "L")
+
+        # Subtitle
+        self.set_font(self.font_family_name, "", 9)
+        self.set_xy(15, 12)
+        self.cell(0, 6, "AI Pitch Compliance Audit Report", 0, 1, "L")
         self.ln(12)
 
     def footer(self):
         self.set_y(-15)
-        self.set_font('Helvetica', 'I', 8)
+        self.set_font(self.font_family_name, "I", 8)
         self.set_text_color(128, 128, 128)
-        self.cell(0, 10, f'Page {self.page_no()}/{{nb}} | CONFIDENTIAL - MARSH INTERNAL USE ONLY', 0, 0, 'C')
+        self.cell(0, 10, f"Page {self.page_no()}/{{nb}} | CONFIDENTIAL - MARSH INTERNAL USE ONLY", 0, 0, "C")
 
-    def chapter_title(self, label):
-        self.set_font('Helvetica', 'B', 12)
+    def safe_text(self, text: str) -> str:
+        cleaned = clean_pdf_text(str(text) if text is not None else "")
+        if self.font_family_name == "Helvetica":
+            return cleaned.encode("latin-1", "ignore").decode("latin-1")
+        return cleaned
+
+    def section_heading(self, label: str):
+        self.set_font(self.font_family_name, "B", 12)
         self.set_text_color(0, 32, 91)
-        self.cell(0, 8, label, 0, 1, 'L')
+        self.cell(0, 8, self.safe_text(label), 0, 1, "L")
         self.set_draw_color(0, 163, 224)
-        self.line(self.get_x(), self.get_y(), self.get_x() + 180, self.get_y())
+        self.set_line_width(0.4)
+        self.line(15, self.get_y(), 195, self.get_y())
         self.ln(4)
 
-    def chapter_body(self, text):
-        self.set_font('Helvetica', '', 10)
-        self.set_text_color(50, 50, 50)
-        self.multi_cell(0, 6, text)
-        self.ln()
 
-
-def clean_pdf_text(text: str) -> str:
-    """Prevents fpdf crashes from Indian Rupee symbols, smart quotes, and unicode."""
-    if not text:
-        return ""
-    replacements = {
-        "₹": "INR ", "’": "'", "‘": "'", "“": '"', "”": '"',
-        "–": "-", "—": "-", "…": "...", "\u200b": "", "\u2011": "-", "\n": " "
-    }
-    for k, v in replacements.items():
-        text = text.replace(k, v)
-    return text.encode('latin-1', 'ignore').decode('latin-1')
-
-
-def generate_audit_pdf(audit_report, company_name: str, baseline_docs: Optional[List[str]] = None, output_path: str = ""):
+def generate_audit_pdf(audit_report, company_name: str, baseline_docs: Optional[List[str]] = None, output_path: str = "") -> str:
     """
-    Renders a 4-part compliance audit memo:
-    1. Executive Summary & Confidence Score
-    2. Claim Traceability Matrix (fpdf2 table layout)
-    3. Detailed Evidence & Auditor Notes (Deep dive)
-    4. Advisor Decision Framework (Approve / Edit / Reject)
+    Renders an executive 4-part compliance audit memo in compliance with Marsh standards:
+    1. Executive Summary
+    2. Claim Traceability Matrix
+    3. Detailed Claim Evidence
+    4. Advisor Decision Framework
     """
-    # Accommodate flexible argument signature
     if not output_path and baseline_docs and isinstance(baseline_docs, str):
         output_path = baseline_docs
         baseline_docs = []
@@ -184,142 +225,193 @@ def generate_audit_pdf(audit_report, company_name: str, baseline_docs: Optional[
     pdf = MarshAuditPDF()
     pdf.alias_nb_pages()
     pdf.set_auto_page_break(auto=True, margin=20)
+    pdf.set_margins(left=15, top=26, right=15)
     pdf.add_page()
 
-    # --- 1. EXECUTIVE SUMMARY ---
-    pdf.chapter_title("1. Executive Summary")
-    
-    score = getattr(audit_report, 'deck_confidence_score', 0.0)
-    summary = getattr(audit_report, 'summary', 'No summary provided.')
-    claims = getattr(audit_report, 'claims', [])
-    
-    score_pct = f"{int(round(score * 100))}%"
-    status = "PASS - COMPLIANT" if score >= 0.70 else "REVIEW REQUIRED"
-    
-    # Info Box
-    pdf.set_font('Helvetica', '', 10)
-    pdf.set_text_color(50, 50, 50)
-    info_data = [
-        ["Client Company:", company_name],
-        ["Generation Date:", datetime.now().strftime("%Y-%m-%d %H:%M")],
-        ["Overall Confidence Score:", score_pct],
-        ["Compliance Status:", status],
-        ["Total Claims Audited:", str(len(claims))],
-        ["Knowledge Base Grounding:", f"{len(baseline_docs) if baseline_docs else 4} Ingested Brochures"]
-    ]
-    
-    for label, value in info_data:
-        pdf.set_font('Helvetica', 'B', 10)
-        pdf.cell(55, 6, label, 0, 0)
-        pdf.set_font('Helvetica', '', 10)
-        pdf.cell(0, 6, clean_pdf_text(str(value)), 0, 1)
-    pdf.ln(4)
-    
-    pdf.chapter_body(f"Auditor Summary: {clean_pdf_text(summary)}")
+    fn = pdf.font_family_name
+    claims = getattr(audit_report, "claims", []) or []
+    score = getattr(audit_report, "deck_confidence_score", 0.0)
+    summary = getattr(audit_report, "summary", "No summary provided.")
 
-    # --- 2. TRACEABILITY MATRIX ---
-    pdf.chapter_title("2. Claim Traceability Matrix")
-    
-    # Using fpdf2 built-in table for auto-wrapping and pagination
-    try:
-        with pdf.table(col_widths=(22, 68, 55, 25)) as table:
-            # Header Row
-            header = table.row()
-            for col_name in ["Status", "Claim Extracted", "Source Document", "Confidence"]:
-                header.cell(col_name)
-            
-            # Data Rows
-            for claim in claims:
-                row = table.row()
-                c_status = getattr(claim, 'status', 'Unknown')
-                status_txt = "VERIFIED" if "Verified" in str(c_status) else "FLAGGED"
-                
-                row.cell(clean_pdf_text(status_txt))
-                row.cell(clean_pdf_text(getattr(claim, 'claim', '')))
-                row.cell(clean_pdf_text(getattr(claim, 'source_document', '').replace(".pdf", "")))
-                row.cell(f"{int(round(getattr(claim, 'confidence_score', 0) * 100))}%")
-    except Exception as e:
-        pdf.chapter_body(f"Table rendering note: {e}")
+    # Determine Compliance Status
+    if score >= 0.85:
+        status = "PASS"
+    elif score >= 0.70:
+        status = "REVIEW REQUIRED"
+    else:
+        status = "FAIL"
+
+    # =========================================================================
+    # Section 1: Executive Summary
+    # =========================================================================
+    pdf.section_heading("Section 1: Executive Summary")
+
+    info_data = [
+        ("Client Company:", company_name),
+        ("Generated On:", datetime.now().strftime("%Y-%m-%d %H:%M:%S")),
+        ("Policy Documents Used:", ", ".join(baseline_docs) if baseline_docs else "All 4 Ingested Policy Brochures"),
+        ("Overall Confidence Score:", f"{int(round(score * 100))}%"),
+        ("Compliance Status:", status),
+    ]
+
+    for label, val in info_data:
+        pdf.set_font(fn, "B", 10)
+        pdf.set_text_color(0, 32, 91)
+        pdf.cell(55, 6, label, 0, 0)
         
+        pdf.set_font(fn, "B" if label == "Compliance Status:" else "", 10)
+        if label == "Compliance Status:":
+            if status == "PASS":
+                pdf.set_text_color(16, 149, 193)  # Marsh Cyan
+            elif status == "REVIEW REQUIRED":
+                pdf.set_text_color(217, 119, 6)   # Amber
+            else:
+                pdf.set_text_color(220, 38, 38)   # Red
+        else:
+            pdf.set_text_color(50, 50, 50)
+            
+        pdf.cell(0, 6, pdf.safe_text(val), 0, 1)
+
+    pdf.ln(3)
+    pdf.set_font(fn, "B", 10)
+    pdf.set_text_color(0, 32, 91)
+    pdf.cell(0, 6, "Auditor Summary:", 0, 1)
+
+    pdf.set_font(fn, "", 9.5)
+    pdf.set_text_color(50, 50, 50)
+    pdf.multi_cell(0, 5, pdf.safe_text(summary))
     pdf.ln(6)
 
-    # --- 3. DETAILED EVIDENCE & AUDITOR NOTES ---
-    pdf.chapter_title("3. Detailed Evidence & Auditor Notes")
-    
+    # =========================================================================
+    # Section 2: Claim Traceability Matrix
+    # =========================================================================
+    pdf.section_heading("Section 2: Claim Traceability Matrix")
+
+    # Table layout with auto-wrapping and pagination (Page width: 210, margins: 15+15=30, printable=180)
+    col_widths = (22, 58, 48, 32, 20)
+    headers = ["Status", "Claim", "Core Policy Feature", "Source Document", "Confidence"]
+
+    try:
+        with pdf.table(col_widths=col_widths) as table:
+            # Header Row
+            h_row = table.row()
+            pdf.set_font(fn, "B", 8.5)
+            for title in headers:
+                h_row.cell(title)
+
+            # Data Rows
+            pdf.set_font(fn, "", 8)
+            for c in claims:
+                row = table.row()
+                raw_st = str(getattr(c, "status", "Unknown"))
+                is_ver = "Verified" in raw_st or raw_st.upper() == "PASS"
+                st_label = "VERIFIED" if is_ver else "FLAGGED"
+
+                c_text = getattr(c, "claim", "")
+                c_feat = getattr(c, "core_policy_feature", "N/A")
+                c_src = getattr(c, "source_document", "").replace(".pdf", "")
+                c_conf = f"{int(round(getattr(c, 'confidence_score', 0.0) * 100))}%"
+
+                row.cell(pdf.safe_text(st_label))
+                row.cell(pdf.safe_text(c_text))
+                row.cell(pdf.safe_text(c_feat))
+                row.cell(pdf.safe_text(c_src))
+                row.cell(pdf.safe_text(c_conf))
+    except Exception as e:
+        logger.warning(f"Table rendering fallback: {e}")
+        pdf.set_font(fn, "", 9)
+        pdf.set_text_color(50, 50, 50)
+        for idx, c in enumerate(claims, 1):
+            st = "VERIFIED" if "Verified" in str(getattr(c, "status", "")) else "FLAGGED"
+            pdf.multi_cell(0, 5, pdf.safe_text(f"[{st}] Claim {idx}: {getattr(c, 'claim', '')} | Feature: {getattr(c, 'core_policy_feature', '')}"))
+
+    pdf.ln(6)
+
+    # =========================================================================
+    # Section 3: Detailed Claim Evidence
+    # =========================================================================
+    pdf.section_heading("Section 3: Detailed Claim Evidence")
+
     for i, claim in enumerate(claims, 1):
-        c_status = getattr(claim, 'status', 'Unknown')
-        is_verified = "Verified" in str(c_status)
-        
-        pdf.set_font('Helvetica', 'B', 11)
-        if is_verified:
-            pdf.set_text_color(0, 163, 224)
-            status_label = "VERIFIED"
-        else:
-            pdf.set_text_color(220, 38, 38)
-            status_label = "HALLUCINATION / UNVERIFIED"
-            
-        pdf.cell(0, 6, f"Claim {i}: [{status_label}]", 0, 1)
-        
-        # Claim Stated
-        pdf.set_font('Helvetica', 'B', 10)
+        raw_status = str(getattr(claim, "status", "Unknown"))
+        is_verified = "Verified" in raw_status or raw_status.upper() == "PASS"
+
+        # Claim header & Status badge text
+        pdf.set_font(fn, "B", 10.5)
         pdf.set_text_color(0, 32, 91)
-        pdf.cell(0, 5, "Claim Stated:", 0, 1)
-        pdf.set_font('Helvetica', '', 9.5)
-        pdf.set_text_color(50, 50, 50)
-        pdf.multi_cell(0, 5, clean_pdf_text(getattr(claim, 'claim', '')))
-        pdf.ln(1)
-        
-        # Core Feature & Limits
-        pdf.set_font('Helvetica', 'B', 10)
-        pdf.set_text_color(50, 50, 50)
-        pdf.cell(40, 5, "Core Feature:", 0, 0)
-        pdf.set_font('Helvetica', '', 9.5)
-        pdf.cell(0, 5, clean_pdf_text(getattr(claim, 'core_policy_feature', 'N/A')), 0, 1)
+        pdf.cell(30, 6, f"Claim ID #{i}:", 0, 0)
 
-        pdf.set_font('Helvetica', 'B', 10)
-        pdf.cell(40, 5, "Stated Limit/Rule:", 0, 0)
-        pdf.set_font('Helvetica', '', 9.5)
-        pdf.cell(0, 5, clean_pdf_text(getattr(claim, 'stated_limit_or_rule', 'Standard terms')), 0, 1)
+        if is_verified:
+            pdf.set_text_color(16, 149, 193)  # Cyan
+            badge_text = "VERIFIED"
+        else:
+            pdf.set_text_color(220, 38, 38)   # Red
+            badge_text = "FLAGGED"
 
-        # Client Application
-        pdf.set_font('Helvetica', 'B', 10)
-        pdf.cell(0, 5, "Client Application:", 0, 1)
-        pdf.set_font('Helvetica', '', 9.5)
-        pdf.multi_cell(0, 5, clean_pdf_text(getattr(claim, 'client_application', 'N/A')))
-        pdf.ln(1)
+        pdf.cell(0, 6, f"[{badge_text}]", 0, 1)
+
+        # Field Helper
+        def render_field(title: str, content: str, is_italic: bool = False):
+            pdf.set_font(fn, "B", 9)
+            pdf.set_text_color(0, 32, 91)
+            pdf.cell(48, 5, title, 0, 0)
+            pdf.set_font(fn, "I" if is_italic else "", 9)
+            pdf.set_text_color(80, 80, 80) if is_italic else pdf.set_text_color(50, 50, 50)
+            pdf.multi_cell(0, 5, pdf.safe_text(content))
+            pdf.ln(1)
+
+        render_field("Extracted Claim:", getattr(claim, "claim", ""))
+        render_field("Core Policy Feature:", getattr(claim, "core_policy_feature", "N/A"))
+        render_field("Stated Limit:", getattr(claim, "stated_limit_or_rule", "Standard policy terms"))
+        render_field("Client Application:", getattr(claim, "client_application", "N/A"))
         
-        # Evidence Snippet
-        pdf.set_font('Helvetica', 'B', 10)
-        pdf.set_text_color(50, 50, 50)
-        pdf.cell(0, 5, "Evidence Found in Policy Brochure:", 0, 1)
-        pdf.set_font('Helvetica', 'I', 9)
-        pdf.set_text_color(80, 80, 80)
-        ev_snip = getattr(claim, 'evidence_snippet', 'No direct evidence found.')
-        pdf.multi_cell(0, 4.5, f'"{clean_pdf_text(ev_snip)}"')
-        pdf.ln(1)
-        
-        # Source Document
-        pdf.set_font('Helvetica', 'B', 10)
-        pdf.set_text_color(50, 50, 50)
-        pdf.cell(40, 5, "Source Document:", 0, 0)
-        pdf.set_font('Helvetica', '', 9.5)
-        pdf.cell(0, 5, clean_pdf_text(getattr(claim, 'source_document', '')), 0, 1)
+        ev_snip = getattr(claim, "evidence_snippet", "No direct evidence found.")
+        render_field("Evidence Snippet:", f'"{ev_snip.strip()}"', is_italic=True)
+        render_field("Source Document:", getattr(claim, "source_document", "N/A"))
+
+        # Auditor Note
+        auditor_note = getattr(claim, "auditor_note", "") or (
+            "Auditor confirmed exact clause match in knowledge base." if is_verified
+            else "Potential hallucination or policy term mismatch. Review required."
+        )
+        render_field("Auditor Note:", auditor_note)
+        pdf.ln(3)
+
+    # =========================================================================
+    # Section 4: Advisor Decision Framework
+    # =========================================================================
+    # Ensure fresh page or clean break for Decision Framework
+    if pdf.get_y() > 210:
+        pdf.add_page()
+    else:
         pdf.ln(4)
 
-    # --- 4. ADVISOR DECISION FRAMEWORK (Objective 2.2) ---
-    pdf.add_page()
-    pdf.chapter_title("4. Advisor Decision Framework")
-    pdf.chapter_body(
-        "Per Marsh compliance protocols, the Client Advisor must review this report before client distribution:\n\n"
-        "1. APPROVE: If Overall Confidence >= 75% and zero claims are flagged as core feature Hallucinations.\n"
-        "2. EDIT: If claims are flagged due to minor limit mismatches (e.g., INR 8,000 vs INR 10,000) or sub-limit phrasing. "
-        "Manually correct the figure in the PPTX using the Evidence Snippet provided above.\n"
-        "3. REJECT: If core policy features are hallucinated or the LLM applied benefits to a policy "
-        "that does not offer them. Regenerate the pitch using stricter baseline documents."
-    )
+    pdf.section_heading("Section 4: Advisor Decision Framework")
+
+    framework_rules = [
+        ("APPROVE", "If Overall Confidence >= 85% and no critical hallucinations are detected. The pitch deck is verified against policy documents and cleared for client distribution."),
+        ("EDIT", "If numeric limits or benefit names need correction using evidence snippets. Advisor should manually adjust numbers/sub-limits in the generated PowerPoint before distribution."),
+        ("REJECT", "If core policy benefit is not present in selected documents or benefits are attributed to an insurer that does not offer them. Regenerate with constrained document selection.")
+    ]
+
+    for action, explanation in framework_rules:
+        pdf.set_font(fn, "B", 10)
+        if action == "APPROVE":
+            pdf.set_text_color(16, 149, 193)
+        elif action == "EDIT":
+            pdf.set_text_color(217, 119, 6)
+        else:
+            pdf.set_text_color(220, 38, 38)
+
+        pdf.cell(28, 6, action + ":", 0, 0)
+        pdf.set_font(fn, "", 9.5)
+        pdf.set_text_color(50, 50, 50)
+        pdf.multi_cell(0, 5, pdf.safe_text(explanation))
+        pdf.ln(2)
 
     pdf.output(output_path)
     logger.info(f"Generated Marsh compliance audit memo at: '{output_path}'")
+    return output_path
 
 
 # =============================================================================
@@ -451,7 +543,7 @@ def generate_pitch(req: GenerateRequest):
                 f.write(f"- **Auditor Evidence & Rationale:**\n  > {c.evidence_snippet.strip()}\n\n")
 
         # Render Corporate PDF Audit Report
-        generate_audit_pdf(audit_report, company_name, selected_docs, str(pdf_path))
+        pdf_full_path = generate_audit_pdf(audit_report, company_name, selected_docs, str(pdf_path))
 
         logger.info(f"Generated all assets for '{company_name}' in '{OUTPUTS_DIR}'.")
 
@@ -463,22 +555,27 @@ def generate_pitch(req: GenerateRequest):
             "pitch_deck": pitch_deck.model_dump(),
             "audit_report": audit_report.model_dump(),
             "retrieved_chunks": retrieved_chunks,
+            "pdf_file_path": str(pdf_full_path),
             "downloads": {
                 "pptx": {
                     "filename": pptx_filename,
                     "url": f"/api/download/pptx/{pptx_filename}",
+                    "file_path": str(pptx_path),
                 },
                 "pdf": {
                     "filename": pdf_filename,
                     "url": f"/api/download/pdf/{pdf_filename}",
+                    "file_path": str(pdf_full_path),
                 },
                 "csv": {
                     "filename": csv_filename,
                     "url": f"/api/download/csv/{csv_filename}",
+                    "file_path": str(csv_path),
                 },
                 "json": {
                     "filename": json_filename,
                     "url": f"/api/download/json/{json_filename}",
+                    "file_path": str(json_path),
                 },
             },
         }
