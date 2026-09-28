@@ -710,61 +710,113 @@ IMPORTANT AUDITING RULES:
 
 
 # =============================================================================
-# 6. Consulting-Grade PPTX Export Utility
+# 6. Consulting-Grade PPTX Export Utility (Template-Based Architecture)
 # =============================================================================
-def export_to_pptx(pitch_deck: PitchDeck, output_path: str = "TCS_Pitch_Deck.pptx") -> str:
-    """
-    Renders an executive, Consulting-Grade (McKinsey / Marsh style) presentation
-    using shape-based infographics, chevron roadmaps, and strict grid layouts.
+TEMPLATE_DIR = Path(__file__).parent / "templates"
+TEMPLATE_PATH = TEMPLATE_DIR / "marsh_pitch_template.pptx"
 
-    Global Design System:
-      - Dimensions: 16:9 (Width: Inches(13.33), Height: Inches(7.5))
-      - Palette: Navy (RGBColor(0, 32, 91)), Cyan (RGBColor(0, 163, 224)),
-                 White, Slate Gray (RGBColor(71, 85, 105)), Light Gray (RGBColor(241, 245, 249)).
-      - Font: 'Calibri'
-      - Margins: Strict 0.8-inch left/right margins for all content.
+COLOR_NAVY = RGBColor(0, 32, 91)         # #00205B Marsh Navy
+COLOR_CYAN = RGBColor(0, 163, 224)       # #00A3E0 Marsh Cyan
+COLOR_WHITE = RGBColor(255, 255, 255)
+COLOR_SLATE = RGBColor(71, 85, 105)      # Slate Gray
+COLOR_LIGHT_GRAY = RGBColor(241, 245, 249)# Light Gray fill
+COLOR_LIGHT_CYAN = RGBColor(224, 244, 252)# Soft Cyan background
+COLOR_BORDER = RGBColor(203, 213, 225)   # Border Gray
+
+
+def safe_truncate(text: str, max_chars: int = 140) -> str:
+    """Safely truncates long bullet text to avoid visual overflow."""
+    if not text:
+        return ""
+    clean = re.sub(r"\s+", " ", str(text)).strip()
+    clean = clean.replace("**", "").replace("*", "")
+    if len(clean) <= max_chars:
+        return clean
+    truncated = clean[:max_chars].rsplit(" ", 1)[0]
+    return f"{truncated}..."
+
+
+def format_bullet_text(p, text: str, font_name: str = "Calibri", font_size_pt: int = 12, text_color: RGBColor = COLOR_NAVY):
     """
-    logger.info(f"Rendering McKinsey/Marsh shape-driven presentation to '{output_path}'...")
+    Parses optional markdown bold syntax like '**Term:** rest of sentence' into runs
+    to give consulting-grade typography.
+    """
+    p.text = ""
+    clean = text.strip()
+    match = re.match(r"^\*\*(.*?)\*\*:?\s*(.*)$", clean)
+    if match:
+        lead, rest = match.group(1), match.group(2)
+        run_lead = p.add_run()
+        run_lead.text = f"{lead}: "
+        run_lead.font.name = font_name
+        run_lead.font.size = Pt(font_size_pt)
+        run_lead.font.bold = True
+        run_lead.font.color.rgb = text_color
+
+        run_rest = p.add_run()
+        run_rest.text = rest
+        run_rest.font.name = font_name
+        run_rest.font.size = Pt(font_size_pt)
+        run_rest.font.bold = False
+        run_rest.font.color.rgb = text_color
+    else:
+        run = p.add_run()
+        run.text = clean
+        run.font.name = font_name
+        run.font.size = Pt(font_size_pt)
+        run.font.color.rgb = text_color
+
+
+def ensure_template_exists() -> Path:
+    """
+    Programmatically creates a pristine, consulting-grade base template if missing:
+    templates/marsh_pitch_template.pptx
+    
+    The template defines 4 widescreen (16:9) slides with named content shapes:
+      - Slide 1 (Cover): cover_title, cover_subtitle, cover_client, cover_date, cover_footer
+      - Slide 2 (Risk Profile): slide2_title, slide2_company_box, slide2_industry, slide2_size, slide2_risks
+      - Slide 3 (Mapping): slide3_title, slide3_risk_column, slide3_benefit_column
+      - Slide 4 (Recommendation): slide4_title, slide4_recommendation, slide4_next_steps
+    """
+    TEMPLATE_DIR.mkdir(parents=True, exist_ok=True)
+    if TEMPLATE_PATH.is_file():
+        return TEMPLATE_PATH
+
+    logger.info(f"Generating clean consulting base template at '{TEMPLATE_PATH}'...")
     prs = Presentation()
     prs.slide_width = Inches(13.33)
     prs.slide_height = Inches(7.5)
-
-    COLOR_NAVY = RGBColor(0, 32, 91)         # #00205B Marsh Navy
-    COLOR_CYAN = RGBColor(0, 163, 224)       # #00A3E0 Marsh Cyan
-    COLOR_WHITE = RGBColor(255, 255, 255)
-    COLOR_SLATE = RGBColor(71, 85, 105)      # Slate Gray
-    COLOR_LIGHT_GRAY = RGBColor(241, 245, 249)# Light Gray fill
-    COLOR_LIGHT_CYAN = RGBColor(224, 244, 252)# Soft Cyan background
-    COLOR_BORDER = RGBColor(203, 213, 225)   # Border Gray
-
     blank_layout = prs.slide_layouts[6]
-    today_str = datetime.now().strftime("%B %d, %Y")
 
-    def add_standard_header(slide, title_text: str):
-        """Draws standard Navy banner and Cyan accent line across the top."""
-        header_bar = slide.shapes.add_shape(
-            MSO_SHAPE.RECTANGLE, Inches(0), Inches(0), Inches(13.33), Inches(1.0)
-        )
-        header_bar.fill.solid()
-        header_bar.fill.fore_color.rgb = COLOR_NAVY
-        header_bar.line.fill.background()
+    def add_base_header(slide, title_shape_name: str, default_title: str):
+        """Header band on content slides: Navy bar + thin Cyan line + title shape."""
+        # Clean white background
+        bg = slide.shapes.add_shape(MSO_SHAPE.RECTANGLE, Inches(0), Inches(0), Inches(13.33), Inches(7.5))
+        bg.fill.solid()
+        bg.fill.fore_color.rgb = COLOR_WHITE
+        bg.line.fill.background()
 
-        # Accent line below Navy header
-        accent_line = slide.shapes.add_shape(
-            MSO_SHAPE.RECTANGLE, Inches(0), Inches(1.0), Inches(13.33), Pt(4)
-        )
-        accent_line.fill.solid()
-        accent_line.fill.fore_color.rgb = COLOR_CYAN
-        accent_line.line.fill.background()
+        # Navy header band
+        hdr = slide.shapes.add_shape(MSO_SHAPE.RECTANGLE, Inches(0), Inches(0), Inches(13.33), Inches(1.0))
+        hdr.fill.solid()
+        hdr.fill.fore_color.rgb = COLOR_NAVY
+        hdr.line.fill.background()
 
-        # Title text
-        title_box = slide.shapes.add_textbox(Inches(0.8), Inches(0.15), Inches(10.5), Inches(0.7))
-        tf = title_box.text_frame
+        # Thin Cyan accent line below header
+        accent = slide.shapes.add_shape(MSO_SHAPE.RECTANGLE, Inches(0), Inches(1.0), Inches(13.33), Pt(4))
+        accent.fill.solid()
+        accent.fill.fore_color.rgb = COLOR_CYAN
+        accent.line.fill.background()
+
+        # Title text shape
+        t_box = slide.shapes.add_textbox(Inches(0.8), Inches(0.15), Inches(10.0), Inches(0.7))
+        t_box.name = title_shape_name
+        tf = t_box.text_frame
         tf.word_wrap = True
         tf.margin_left = Inches(0)
         tf.margin_top = Inches(0)
         p = tf.paragraphs[0]
-        p.text = title_text
+        p.text = default_title
         p.font.name = "Calibri"
         p.font.size = Pt(28)
         p.font.bold = True
@@ -781,387 +833,628 @@ def export_to_pptx(pitch_deck: PitchDeck, output_path: str = "TCS_Pitch_Deck.ppt
         p_tag.font.color.rgb = COLOR_CYAN
         p_tag.alignment = PP_ALIGN.RIGHT
 
-    for slide_data in pitch_deck.slides:
-        slide = prs.slides.add_slide(blank_layout)
+        # Standard Footer
+        ft_box = slide.shapes.add_textbox(Inches(0.8), Inches(7.05), Inches(11.73), Inches(0.35))
+        tf_ft = ft_box.text_frame
+        p_ft = tf_ft.paragraphs[0]
+        p_ft.text = "Marsh Risk Advisory  |  Strictly Confidential"
+        p_ft.font.name = "Calibri"
+        p_ft.font.size = Pt(10)
+        p_ft.font.color.rgb = COLOR_SLATE
 
-        # Base clean white background
-        base_bg = slide.shapes.add_shape(
-            MSO_SHAPE.RECTANGLE, Inches(0), Inches(0), Inches(13.33), Inches(7.5)
-        )
-        base_bg.fill.solid()
-        base_bg.fill.fore_color.rgb = COLOR_WHITE
-        base_bg.line.fill.background()
+    # =========================================================================
+    # Slide 1: Cover Template
+    # =========================================================================
+    s1 = prs.slides.add_slide(blank_layout)
+    # White base
+    bg1 = s1.shapes.add_shape(MSO_SHAPE.RECTANGLE, Inches(0), Inches(0), Inches(13.33), Inches(7.5))
+    bg1.fill.solid()
+    bg1.fill.fore_color.rgb = COLOR_WHITE
+    bg1.line.fill.background()
 
-        # =====================================================================
-        # Slide 1: The Executive Cover
-        # =====================================================================
-        if slide_data.slide_number == 1:
-            # Left 30% Solid Navy Rectangle (Width: Inches(4), Height: Inches(7.5))
-            left_panel = slide.shapes.add_shape(
-                MSO_SHAPE.RECTANGLE, Inches(0), Inches(0), Inches(4.0), Inches(7.5)
-            )
-            left_panel.fill.solid()
-            left_panel.fill.fore_color.rgb = COLOR_NAVY
-            left_panel.line.fill.background()
+    # Left 30% Solid Navy rectangle
+    left_panel = s1.shapes.add_shape(MSO_SHAPE.RECTANGLE, Inches(0), Inches(0), Inches(4.0), Inches(7.5))
+    left_panel.fill.solid()
+    left_panel.fill.fore_color.rgb = COLOR_NAVY
+    left_panel.line.fill.background()
 
-            # Thin Cyan vertical divider line
-            divider = slide.shapes.add_shape(
-                MSO_SHAPE.RECTANGLE, Inches(4.0), Inches(0), Inches(0.05), Inches(7.5)
-            )
-            divider.fill.solid()
-            divider.fill.fore_color.rgb = COLOR_CYAN
-            divider.line.fill.background()
+    # Thin Cyan vertical divider line
+    div1 = s1.shapes.add_shape(MSO_SHAPE.RECTANGLE, Inches(4.0), Inches(0), Inches(0.06), Inches(7.5))
+    div1.fill.solid()
+    div1.fill.fore_color.rgb = COLOR_CYAN
+    div1.line.fill.background()
 
-            # Inside Navy panel: "MARSH" (White, 40pt, Bold) & "RISK ADVISORY" (Cyan, 16pt)
-            navy_brand_box = slide.shapes.add_textbox(Inches(0.8), Inches(2.8), Inches(2.8), Inches(2.5))
-            tf_nb = navy_brand_box.text_frame
-            tf_nb.word_wrap = True
-            tf_nb.margin_left = Inches(0)
-            tf_nb.margin_top = Inches(0)
+    # Brand Box on Navy panel
+    bb = s1.shapes.add_textbox(Inches(0.8), Inches(2.7), Inches(2.8), Inches(2.4))
+    tf_bb = bb.text_frame
+    p_bb1 = tf_bb.paragraphs[0]
+    p_bb1.text = "MARSH"
+    p_bb1.font.name = "Calibri"
+    p_bb1.font.size = Pt(38)
+    p_bb1.font.bold = True
+    p_bb1.font.color.rgb = COLOR_WHITE
 
-            p_m = tf_nb.paragraphs[0]
-            p_m.text = "MARSH"
-            p_m.font.name = "Calibri"
-            p_m.font.size = Pt(40)
-            p_m.font.bold = True
-            p_m.font.color.rgb = COLOR_WHITE
+    p_bb2 = tf_bb.add_paragraph()
+    p_bb2.text = "RISK ADVISORY"
+    p_bb2.font.name = "Calibri"
+    p_bb2.font.size = Pt(15)
+    p_bb2.font.bold = True
+    p_bb2.font.color.rgb = COLOR_CYAN
+    p_bb2.space_before = Pt(6)
 
-            p_ra = tf_nb.add_paragraph()
-            p_ra.text = "RISK ADVISORY"
-            p_ra.font.name = "Calibri"
-            p_ra.font.size = Pt(16)
-            p_ra.font.bold = True
-            p_ra.font.color.rgb = COLOR_CYAN
-            p_ra.space_before = Pt(6)
+    # Right Content Area: Title
+    t1 = s1.shapes.add_textbox(Inches(4.8), Inches(2.0), Inches(7.8), Inches(1.3))
+    t1.name = "cover_title"
+    tf_t1 = t1.text_frame
+    tf_t1.word_wrap = True
+    p_t1 = tf_t1.paragraphs[0]
+    p_t1.text = "Corporate Health & Benefits Strategy"
+    p_t1.font.name = "Calibri"
+    p_t1.font.size = Pt(40)
+    p_t1.font.bold = True
+    p_t1.font.color.rgb = COLOR_NAVY
 
-            # On Right 70% (White Background): Title & Subtitle
-            right_content_box = slide.shapes.add_textbox(Inches(4.8), Inches(2.2), Inches(7.7), Inches(3.5))
-            tf_rc = right_content_box.text_frame
-            tf_rc.word_wrap = True
-            tf_rc.margin_left = Inches(0)
-            tf_rc.margin_top = Inches(0)
+    # Right Content Area: Subtitle
+    sub1 = s1.shapes.add_textbox(Inches(4.8), Inches(3.35), Inches(7.8), Inches(0.9))
+    sub1.name = "cover_subtitle"
+    tf_sub1 = sub1.text_frame
+    tf_sub1.word_wrap = True
+    p_sub1 = tf_sub1.paragraphs[0]
+    p_sub1.text = "Prepared for Corporate Client"
+    p_sub1.font.name = "Calibri"
+    p_sub1.font.size = Pt(22)
+    p_sub1.font.color.rgb = COLOR_CYAN
 
-            p_t = tf_rc.paragraphs[0]
-            p_t.text = "Corporate Health & Benefits Strategy"
-            p_t.font.name = "Calibri"
-            p_t.font.size = Pt(44)
-            p_t.font.bold = True
-            p_t.font.color.rgb = COLOR_NAVY
-            p_t.space_after = Pt(14)
+    # Right Content Area: Client Name Pill / Tag
+    cl1 = s1.shapes.add_textbox(Inches(4.8), Inches(4.3), Inches(7.8), Inches(0.6))
+    cl1.name = "cover_client"
+    tf_cl1 = cl1.text_frame
+    p_cl1 = tf_cl1.paragraphs[0]
+    p_cl1.text = "Enterprise Client Placement"
+    p_cl1.font.name = "Calibri"
+    p_cl1.font.size = Pt(14)
+    p_cl1.font.color.rgb = COLOR_SLATE
 
-            p_sub = tf_rc.add_paragraph()
-            p_sub.text = f"Prepared for {pitch_deck.company_name}"
-            p_sub.font.name = "Calibri"
-            p_sub.font.size = Pt(24)
-            p_sub.font.color.rgb = COLOR_SLATE
-            p_sub.space_after = Pt(20)
+    # Cover Date
+    d1 = s1.shapes.add_textbox(Inches(4.8), Inches(6.1), Inches(4.0), Inches(0.5))
+    d1.name = "cover_date"
+    tf_d1 = d1.text_frame
+    p_d1 = tf_d1.paragraphs[0]
+    p_d1.text = datetime.now().strftime("%B %d, %Y")
+    p_d1.font.name = "Calibri"
+    p_d1.font.size = Pt(12)
+    p_d1.font.color.rgb = COLOR_SLATE
 
-            p_desc = tf_rc.add_paragraph()
-            p_desc.text = "Data-Driven Risk Placement & Statutory Policy Architecture"
-            p_desc.font.name = "Calibri"
-            p_desc.font.size = Pt(14)
-            p_desc.font.color.rgb = COLOR_SLATE
+    # Cover Footer
+    ft1 = s1.shapes.add_textbox(Inches(8.5), Inches(6.1), Inches(4.0), Inches(0.5))
+    ft1.name = "cover_footer"
+    tf_ft1 = ft1.text_frame
+    p_ft1 = tf_ft1.paragraphs[0]
+    p_ft1.text = "Marsh Risk Advisory | Confidential"
+    p_ft1.font.name = "Calibri"
+    p_ft1.font.size = Pt(12)
+    p_ft1.font.color.rgb = COLOR_SLATE
+    p_ft1.alignment = PP_ALIGN.RIGHT
 
-            # Bottom right: Date and "Confidential" (Slate Gray, 12pt)
-            footer_box = slide.shapes.add_textbox(Inches(4.8), Inches(6.4), Inches(7.7), Inches(0.5))
-            tf_foot = footer_box.text_frame
-            tf_foot.margin_left = Inches(0)
-            p_f = tf_foot.paragraphs[0]
-            p_f.text = f"{today_str}  |  Strictly Confidential"
-            p_f.font.name = "Calibri"
-            p_f.font.size = Pt(12)
-            p_f.font.color.rgb = COLOR_SLATE
+    # =========================================================================
+    # Slide 2: Company Overview & Risk Profile Template
+    # =========================================================================
+    s2 = prs.slides.add_slide(blank_layout)
+    add_base_header(s2, "slide2_title", "Executive Company Overview & Occupational Exposures")
 
-        # =====================================================================
-        # Slide 2: Executive Risk Profile
-        # =====================================================================
-        elif slide_data.slide_number == 2:
-            add_standard_header(slide, slide_data.title or "Executive Risk Profile")
+    # Left Container Box (Company Overview)
+    s2_left = s2.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE, Inches(0.8), Inches(1.4), Inches(5.2), Inches(5.4))
+    s2_left.fill.solid()
+    s2_left.fill.fore_color.rgb = COLOR_LIGHT_GRAY
+    s2_left.line.color.rgb = COLOR_BORDER
+    s2_left.line.width = Pt(1)
 
-            # Left Column (Width: 5.2 inches): "Company Overview"
-            left_box = slide.shapes.add_shape(
-                MSO_SHAPE.ROUNDED_RECTANGLE, Inches(0.8), Inches(1.5), Inches(5.2), Inches(5.2)
-            )
-            left_box.fill.solid()
-            left_box.fill.fore_color.rgb = COLOR_LIGHT_GRAY
-            left_box.line.color.rgb = COLOR_BORDER
-            left_box.line.width = Pt(1)
+    s2_hdr_left = s2.shapes.add_textbox(Inches(1.1), Inches(1.6), Inches(4.6), Inches(0.4))
+    tf_s2hl = s2_hdr_left.text_frame
+    p_s2hl = tf_s2hl.paragraphs[0]
+    p_s2hl.text = "ORGANIZATIONAL PROFILE"
+    p_s2hl.font.name = "Calibri"
+    p_s2hl.font.size = Pt(13)
+    p_s2hl.font.bold = True
+    p_s2hl.font.color.rgb = COLOR_NAVY
 
-            # Left Column Content Box
-            lt_box = slide.shapes.add_textbox(Inches(1.1), Inches(1.8), Inches(4.6), Inches(4.5))
-            tf_lt = lt_box.text_frame
-            tf_lt.word_wrap = True
-            tf_lt.margin_left = Inches(0)
-            tf_lt.margin_top = Inches(0)
+    # Named placeholder: Industry
+    s2_ind = s2.shapes.add_textbox(Inches(1.1), Inches(2.1), Inches(4.6), Inches(0.7))
+    s2_ind.name = "slide2_industry"
+    tf_s2ind = s2_ind.text_frame
+    tf_s2ind.word_wrap = True
+    p_ind = tf_s2ind.paragraphs[0]
+    p_ind.text = "Industry: Technology & Information Services"
+    p_ind.font.name = "Calibri"
+    p_ind.font.size = Pt(12)
+    p_ind.font.color.rgb = COLOR_SLATE
 
-            p_oh = tf_lt.paragraphs[0]
-            p_oh.text = "COMPANY OVERVIEW"
-            p_oh.font.name = "Calibri"
-            p_oh.font.size = Pt(14)
-            p_oh.font.bold = True
-            p_oh.font.color.rgb = COLOR_NAVY
-            p_oh.space_after = Pt(14)
+    # Named placeholder: Size
+    s2_sz = s2.shapes.add_textbox(Inches(1.1), Inches(2.85), Inches(4.6), Inches(0.7))
+    s2_sz.name = "slide2_size"
+    tf_s2sz = s2_sz.text_frame
+    tf_s2sz.word_wrap = True
+    p_sz = tf_s2sz.paragraphs[0]
+    p_sz.text = "Workforce Size: 50,000+ Employees"
+    p_sz.font.name = "Calibri"
+    p_sz.font.size = Pt(12)
+    p_sz.font.color.rgb = COLOR_SLATE
 
-            # Insert first 2 bullets as structured overview
-            overview_bullets = slide_data.bullet_points[:2] if slide_data.bullet_points else ["Corporate enterprise operations."]
-            for bp in overview_bullets:
-                p_b = tf_lt.add_paragraph()
-                p_b.text = f"•  {bp}"
-                p_b.font.name = "Calibri"
-                p_b.font.size = Pt(13)
-                p_b.font.color.rgb = COLOR_NAVY
-                p_b.space_after = Pt(12)
+    # Named placeholder: Overview Narrative
+    s2_ov = s2.shapes.add_textbox(Inches(1.1), Inches(3.6), Inches(4.6), Inches(3.0))
+    s2_ov.name = "slide2_company_box"
+    tf_s2ov = s2_ov.text_frame
+    tf_s2ov.word_wrap = True
+    p_ov = tf_s2ov.paragraphs[0]
+    p_ov.text = "Company operations overview."
+    p_ov.font.name = "Calibri"
+    p_ov.font.size = Pt(11.5)
+    p_ov.font.color.rgb = COLOR_NAVY
 
-            # Bottom highlight pill
-            badge_shape = slide.shapes.add_shape(
-                MSO_SHAPE.ROUNDED_RECTANGLE, Inches(1.1), Inches(5.7), Inches(4.6), Inches(0.65)
-            )
-            badge_shape.fill.solid()
-            badge_shape.fill.fore_color.rgb = COLOR_NAVY
-            badge_shape.line.fill.background()
-            tf_badge = badge_shape.text_frame
-            p_bdg = tf_badge.paragraphs[0]
-            p_bdg.text = f"Target Client: {pitch_deck.company_name}"
-            p_bdg.font.name = "Calibri"
-            p_bdg.font.size = Pt(13)
-            p_bdg.font.bold = True
-            p_bdg.font.color.rgb = COLOR_WHITE
-            p_bdg.alignment = PP_ALIGN.CENTER
+    # Right Container Box (Key Occupational Risks)
+    s2_right = s2.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE, Inches(6.5), Inches(1.4), Inches(6.0), Inches(5.4))
+    s2_right.fill.solid()
+    s2_right.fill.fore_color.rgb = COLOR_LIGHT_GRAY
+    s2_right.line.color.rgb = COLOR_BORDER
+    s2_right.line.width = Pt(1)
 
-            # Right Column (Width: 6.0 inches): "Key Occupational Exposures"
-            right_header_box = slide.shapes.add_textbox(Inches(6.5), Inches(1.4), Inches(6.0), Inches(0.5))
-            tf_rh = right_header_box.text_frame
-            p_rh = tf_rh.paragraphs[0]
-            p_rh.text = "KEY OCCUPATIONAL EXPOSURES"
-            p_rh.font.name = "Calibri"
-            p_rh.font.size = Pt(14)
-            p_rh.font.bold = True
-            p_rh.font.color.rgb = COLOR_NAVY
+    s2_hdr_right = s2.shapes.add_textbox(Inches(6.8), Inches(1.6), Inches(5.4), Inches(0.4))
+    tf_s2hr = s2_hdr_right.text_frame
+    p_s2hr = tf_s2hr.paragraphs[0]
+    p_s2hr.text = "KEY OCCUPATIONAL EXPOSURES"
+    p_s2hr.font.name = "Calibri"
+    p_s2hr.font.size = Pt(13)
+    p_s2hr.font.bold = True
+    p_s2hr.font.color.rgb = COLOR_NAVY
 
-            # VISUAL ELEMENT: Draw 3 or 4 ROUNDED_RECTANGLE cards evenly spaced vertically
-            risk_bullets = slide_data.bullet_points[2:] if len(slide_data.bullet_points) > 2 else slide_data.bullet_points
+    # Named placeholder: slide2_risks
+    s2_risks = s2.shapes.add_textbox(Inches(6.8), Inches(2.1), Inches(5.4), Inches(4.5))
+    s2_risks.name = "slide2_risks"
+    tf_s2r = s2_risks.text_frame
+    tf_s2r.word_wrap = True
+    p_r1 = tf_s2r.paragraphs[0]
+    p_r1.text = "• Occupational risks identified across workforce."
+    p_r1.font.name = "Calibri"
+    p_r1.font.size = Pt(11.5)
+    p_r1.font.color.rgb = COLOR_NAVY
+
+    # =========================================================================
+    # Slide 3: Policy Benefits Mapped to Exposures Template
+    # =========================================================================
+    s3 = prs.slides.add_slide(blank_layout)
+    add_base_header(s3, "slide3_title", "Policy Benefits Mapped to Corporate Exposures")
+
+    # Column Titles
+    l_title = s3.shapes.add_textbox(Inches(0.8), Inches(1.3), Inches(5.0), Inches(0.4))
+    tf_lt = l_title.text_frame
+    p_lt = tf_lt.paragraphs[0]
+    p_lt.text = "IDENTIFIED EXPOSURES"
+    p_lt.font.name = "Calibri"
+    p_lt.font.size = Pt(13)
+    p_lt.font.bold = True
+    p_lt.font.color.rgb = COLOR_SLATE
+
+    r_title = s3.shapes.add_textbox(Inches(7.5), Inches(1.3), Inches(5.0), Inches(0.4))
+    tf_rt = r_title.text_frame
+    p_rt = tf_rt.paragraphs[0]
+    p_rt.text = "TARGETED POLICY BENEFITS"
+    p_rt.font.name = "Calibri"
+    p_rt.font.size = Pt(13)
+    p_rt.font.bold = True
+    p_rt.font.color.rgb = COLOR_CYAN
+
+    # Mapping Arrow Visual
+    arrow = s3.shapes.add_shape(MSO_SHAPE.RIGHT_ARROW, Inches(6.1), Inches(3.6), Inches(1.1), Inches(0.8))
+    arrow.fill.solid()
+    arrow.fill.fore_color.rgb = COLOR_CYAN
+    arrow.line.fill.background()
+
+    # Left Container Card
+    s3_left_box = s3.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE, Inches(0.8), Inches(1.75), Inches(4.9), Inches(5.0))
+    s3_left_box.fill.solid()
+    s3_left_box.fill.fore_color.rgb = COLOR_LIGHT_GRAY
+    s3_left_box.line.color.rgb = COLOR_BORDER
+    s3_left_box.line.width = Pt(1)
+
+    # Named placeholder: slide3_risk_column
+    s3_rc = s3.shapes.add_textbox(Inches(1.0), Inches(1.95), Inches(4.5), Inches(4.6))
+    s3_rc.name = "slide3_risk_column"
+    tf_s3rc = s3_rc.text_frame
+    tf_s3rc.word_wrap = True
+    p_s3rc = tf_s3rc.paragraphs[0]
+    p_s3rc.text = "• Identified risk exposures."
+    p_s3rc.font.name = "Calibri"
+    p_s3rc.font.size = Pt(11.5)
+    p_s3rc.font.color.rgb = COLOR_NAVY
+
+    # Right Container Card
+    s3_right_box = s3.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE, Inches(7.5), Inches(1.75), Inches(5.0), Inches(5.0))
+    s3_right_box.fill.solid()
+    s3_right_box.fill.fore_color.rgb = COLOR_LIGHT_GRAY
+    s3_right_box.line.color.rgb = COLOR_CYAN
+    s3_right_box.line.width = Pt(1.5)
+
+    # Named placeholder: slide3_benefit_column
+    s3_bc = s3.shapes.add_textbox(Inches(7.7), Inches(1.95), Inches(4.6), Inches(4.6))
+    s3_bc.name = "slide3_benefit_column"
+    tf_s3bc = s3_bc.text_frame
+    tf_s3bc.word_wrap = True
+    p_s3bc = tf_s3bc.paragraphs[0]
+    p_s3bc.text = "• Corresponding policy benefits."
+    p_s3bc.font.name = "Calibri"
+    p_s3bc.font.size = Pt(11.5)
+    p_s3bc.font.color.rgb = COLOR_NAVY
+
+    # =========================================================================
+    # Slide 4: Recommended Policy & Next Steps Template
+    # =========================================================================
+    s4 = prs.slides.add_slide(blank_layout)
+    add_base_header(s4, "slide4_title", "Recommended Policy Placement & Strategic Implementation")
+
+    # Top Half: Recommendation Box
+    rec_box = s4.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE, Inches(0.8), Inches(1.4), Inches(11.73), Inches(3.3))
+    rec_box.fill.solid()
+    rec_box.fill.fore_color.rgb = COLOR_LIGHT_CYAN
+    rec_box.line.color.rgb = COLOR_NAVY
+    rec_box.line.width = Pt(1.5)
+
+    # Named placeholder: slide4_recommendation
+    s4_rec = s4.shapes.add_textbox(Inches(1.1), Inches(1.55), Inches(11.1), Inches(3.0))
+    s4_rec.name = "slide4_recommendation"
+    tf_s4rec = s4_rec.text_frame
+    tf_s4rec.word_wrap = True
+    p_s4rec = tf_s4rec.paragraphs[0]
+    p_s4rec.text = "Recommended insurer placement and key reasons."
+    p_s4rec.font.name = "Calibri"
+    p_s4rec.font.size = Pt(12)
+    p_s4rec.font.color.rgb = COLOR_NAVY
+
+    # Bottom Half: Next Steps Title
+    ns_title = s4.shapes.add_textbox(Inches(0.8), Inches(4.9), Inches(11.73), Inches(0.4))
+    tf_nst = ns_title.text_frame
+    p_nst = tf_nst.paragraphs[0]
+    p_nst.text = "IMPLEMENTATION ROADMAP & NEXT STEPS"
+    p_nst.font.name = "Calibri"
+    p_nst.font.size = Pt(13)
+    p_nst.font.bold = True
+    p_nst.font.color.rgb = COLOR_SLATE
+
+    # Next Steps Container
+    ns_container = s4.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE, Inches(0.8), Inches(5.35), Inches(11.73), Inches(1.55))
+    ns_container.fill.solid()
+    ns_container.fill.fore_color.rgb = COLOR_LIGHT_GRAY
+    ns_container.line.color.rgb = COLOR_BORDER
+    ns_container.line.width = Pt(1)
+
+    # Named placeholder: slide4_next_steps
+    s4_ns = s4.shapes.add_textbox(Inches(1.1), Inches(5.45), Inches(11.1), Inches(1.35))
+    s4_ns.name = "slide4_next_steps"
+    tf_s4ns = s4_ns.text_frame
+    tf_s4ns.word_wrap = True
+    p_s4ns = tf_s4ns.paragraphs[0]
+    p_s4ns.text = "1. Requirement Validation | 2. Custom Quotation | 3. Broker Presentation | 4. Policy Placement"
+    p_s4ns.font.name = "Calibri"
+    p_s4ns.font.size = Pt(11)
+    p_s4ns.font.color.rgb = COLOR_NAVY
+
+    prs.save(TEMPLATE_PATH)
+    logger.info(f"Base PowerPoint template generated successfully at '{TEMPLATE_PATH}'.")
+    return TEMPLATE_PATH
+
+
+def export_to_pptx(pitch_deck: PitchDeck, output_path: str = "TCS_Pitch_Deck.pptx", profile: Optional[Any] = None) -> str:
+    """
+    Renders an executive, consulting-grade Marsh pitch deck using the template system.
+    
+    Architecture:
+      1. Loads templates/marsh_pitch_template.pptx (creating it if absent via ensure_template_exists()).
+      2. Injects content into predefined named shapes:
+         - Cover: cover_title, cover_subtitle, cover_client, cover_date, cover_footer
+         - Slide 2: slide2_title, slide2_industry, slide2_size, slide2_company_box, slide2_risks
+         - Slide 3: slide3_title, slide3_risk_column, slide3_benefit_column
+         - Slide 4: slide4_title, slide4_recommendation, slide4_next_steps
+      3. Limits bullets to max 5 per slide with safe text truncation and word_wrap=True.
+      4. Injects broker presentation scripts into the notes slide.
+      5. Saves output presentation to output_path.
+    """
+    ensure_template_exists()
+    logger.info(f"Loading base template from '{TEMPLATE_PATH}' and rendering presentation to '{output_path}'...")
+
+    prs = Presentation(str(TEMPLATE_PATH))
+    today_str = datetime.now().strftime("%B %d, %Y")
+    company_name = pitch_deck.company_name or "Corporate Client"
+
+    # Index named shapes on each slide
+    slide_shapes_map = []
+    for s in prs.slides:
+        shape_dict = {}
+        for shape in s.shapes:
+            if shape.name:
+                shape_dict[shape.name] = shape
+        slide_shapes_map.append(shape_dict)
+
+    # Safe extraction of slide deck data
+    slides = pitch_deck.slides if pitch_deck.slides else []
+    s1_data = slides[0] if len(slides) > 0 else SlideModel(slide_number=1, title="Cover", bullet_points=[], speaker_notes="")
+    s2_data = slides[1] if len(slides) > 1 else SlideModel(slide_number=2, title="Company Risk Profile", bullet_points=[], speaker_notes="")
+    s3_data = slides[2] if len(slides) > 2 else SlideModel(slide_number=3, title="Policy Benefits Mapping", bullet_points=[], speaker_notes="")
+    s4_data = slides[3] if len(slides) > 3 else SlideModel(slide_number=4, title="Recommended Policy", bullet_points=[], speaker_notes="")
+
+    # -------------------------------------------------------------------------
+    # Slide 1: Cover
+    # -------------------------------------------------------------------------
+    if len(prs.slides) > 0:
+        shapes = slide_shapes_map[0]
+        if "cover_title" in shapes:
+            tf = shapes["cover_title"].text_frame
+            tf.word_wrap = True
+            p = tf.paragraphs[0]
+            p.text = "Corporate Health & Benefits Strategy"
+            p.font.name = "Calibri"
+            p.font.size = Pt(38)
+            p.font.bold = True
+            p.font.color.rgb = COLOR_NAVY
+
+        if "cover_subtitle" in shapes:
+            tf = shapes["cover_subtitle"].text_frame
+            tf.word_wrap = True
+            p = tf.paragraphs[0]
+            p.text = f"Prepared for {company_name}"
+            p.font.name = "Calibri"
+            p.font.size = Pt(22)
+            p.font.color.rgb = COLOR_CYAN
+
+        if "cover_client" in shapes:
+            tf = shapes["cover_client"].text_frame
+            p = tf.paragraphs[0]
+            ind_txt = getattr(profile, "industry", "Global Enterprise") if profile else "Global Enterprise"
+            p.text = f"Industry: {ind_txt}  |  Brokerage Placement"
+            p.font.name = "Calibri"
+            p.font.size = Pt(13)
+            p.font.color.rgb = COLOR_SLATE
+
+        if "cover_date" in shapes:
+            tf = shapes["cover_date"].text_frame
+            p = tf.paragraphs[0]
+            p.text = today_str
+            p.font.name = "Calibri"
+            p.font.size = Pt(12)
+            p.font.color.rgb = COLOR_SLATE
+
+        if "cover_footer" in shapes:
+            tf = shapes["cover_footer"].text_frame
+            p = tf.paragraphs[0]
+            p.text = "Marsh Risk Advisory | Confidential"
+            p.font.name = "Calibri"
+            p.font.size = Pt(12)
+            p.font.color.rgb = COLOR_SLATE
+            p.alignment = PP_ALIGN.RIGHT
+
+        # Speaker notes
+        notes = prs.slides[0].notes_slide.notes_text_frame
+        notes.text = f"[Marsh Broker Script - Executive Cover]\n\n{s1_data.speaker_notes or 'Introduce Marsh corporate brokerage team and set the agenda for custom benefits design.'}"
+
+    # -------------------------------------------------------------------------
+    # Slide 2: Company Overview & Risk Profile
+    # -------------------------------------------------------------------------
+    if len(prs.slides) > 1:
+        shapes = slide_shapes_map[1]
+        if "slide2_title" in shapes:
+            tf = shapes["slide2_title"].text_frame
+            tf.word_wrap = True
+            p = tf.paragraphs[0]
+            p.text = s2_data.title or "Company Overview & Identified Occupational Exposures"
+            p.font.name = "Calibri"
+            p.font.size = Pt(26)
+            p.font.bold = True
+            p.font.color.rgb = COLOR_WHITE
+
+        # Industry & Size from Profile or Slides
+        industry_val = getattr(profile, "industry", "Information Technology & Enterprise Services") if profile else "Information Technology & Enterprise Services"
+        size_val = getattr(profile, "size", "50,000+ Global Workforce") if profile else "Large Enterprise Workforce"
+
+        if "slide2_industry" in shapes:
+            tf = shapes["slide2_industry"].text_frame
+            tf.word_wrap = True
+            p = tf.paragraphs[0]
+            p.text = f"Industry Sector: {industry_val}"
+            p.font.name = "Calibri"
+            p.font.size = Pt(12)
+            p.font.bold = True
+            p.font.color.rgb = COLOR_NAVY
+
+        if "slide2_size" in shapes:
+            tf = shapes["slide2_size"].text_frame
+            tf.word_wrap = True
+            p = tf.paragraphs[0]
+            p.text = f"Workforce Scale: {size_val}"
+            p.font.name = "Calibri"
+            p.font.size = Pt(12)
+            p.font.bold = True
+            p.font.color.rgb = COLOR_NAVY
+
+        if "slide2_company_box" in shapes:
+            tf = shapes["slide2_company_box"].text_frame
+            tf.word_wrap = True
+            raw_summary = getattr(profile, "raw_summary", "") if profile else ""
+            if not raw_summary and s2_data.bullet_points:
+                raw_summary = s2_data.bullet_points[0]
+            if not raw_summary:
+                raw_summary = f"{company_name} is a leading enterprise operating multi-shift global delivery centers with intensive desk and screen-based workforces."
+
+            tf.text = ""
+            p = tf.paragraphs[0]
+            p.text = "Operational Dynamics:"
+            p.font.name = "Calibri"
+            p.font.size = Pt(12)
+            p.font.bold = True
+            p.font.color.rgb = COLOR_NAVY
+            p.space_after = Pt(4)
+
+            p2 = tf.add_paragraph()
+            p2.text = safe_truncate(raw_summary, max_chars=260)
+            p2.font.name = "Calibri"
+            p2.font.size = Pt(11)
+            p2.font.color.rgb = COLOR_SLATE
+
+        if "slide2_risks" in shapes:
+            tf = shapes["slide2_risks"].text_frame
+            tf.word_wrap = True
+            tf.text = ""
+            risk_bullets = []
+            if profile and getattr(profile, "key_risks", None):
+                risk_bullets = profile.key_risks
+            elif s2_data.bullet_points:
+                risk_bullets = s2_data.bullet_points[1:] if len(s2_data.bullet_points) > 1 else s2_data.bullet_points
+
             if not risk_bullets:
-                risk_bullets = ["Workplace ergonomics and postural fatigue", "Mental health strain and workload burnout", "Lifestyle chronic disease prevention"]
+                risk_bullets = [
+                    "Sedentary Screen Time & Pre-Diabetic Markers",
+                    "Ergonomic Musculoskeletal Neck and Lumbar Strain",
+                    "Workforce Stress, Rotating Shifts & Sleep Disruption",
+                    "Chronic Lifestyle Disease Frequency in Desk Personnel",
+                ]
 
-            num_cards = min(4, len(risk_bullets))
-            card_height = 1.05
-            gap = 0.16
-            start_y = 2.0
+            # Enforce max 5 bullets and safe truncation
+            for idx, r_text in enumerate(risk_bullets[:5]):
+                p = tf.paragraphs[0] if idx == 0 else tf.add_paragraph()
+                clean_r = safe_truncate(r_text, max_chars=130)
+                format_bullet_text(p, f"•  {clean_r}", font_size_pt=11, text_color=COLOR_NAVY)
+                p.space_after = Pt(8)
 
-            for i in range(num_cards):
-                card_y = start_y + (i * (card_height + gap))
-                card_shape = slide.shapes.add_shape(
-                    MSO_SHAPE.ROUNDED_RECTANGLE, Inches(6.5), Inches(card_y), Inches(6.0), Inches(card_height)
-                )
-                card_shape.fill.solid()
-                card_shape.fill.fore_color.rgb = COLOR_LIGHT_GRAY
-                card_shape.line.color.rgb = COLOR_SLATE
-                card_shape.line.width = Pt(1)
+        # Speaker notes
+        notes = prs.slides[1].notes_slide.notes_text_frame
+        notes.text = f"[Marsh Broker Script - Risk Profile]\n\n{s2_data.speaker_notes or 'Highlight specific workforce exposures and absenteeism drivers quantified during risk profiling.'}"
 
-                # Cyan indicator tab on left edge of card
-                pill_tab = slide.shapes.add_shape(
-                    MSO_SHAPE.ROUNDED_RECTANGLE, Inches(6.6), Inches(card_y + 0.15), Inches(0.12), Inches(card_height - 0.3)
-                )
-                pill_tab.fill.solid()
-                pill_tab.fill.fore_color.rgb = COLOR_CYAN
-                pill_tab.line.fill.background()
+    # -------------------------------------------------------------------------
+    # Slide 3: Policy Benefits Mapped to Exposures
+    # -------------------------------------------------------------------------
+    if len(prs.slides) > 2:
+        shapes = slide_shapes_map[2]
+        if "slide3_title" in shapes:
+            tf = shapes["slide3_title"].text_frame
+            tf.word_wrap = True
+            p = tf.paragraphs[0]
+            p.text = s3_data.title or "Policy Architecture Mapped to Corporate Exposures"
+            p.font.name = "Calibri"
+            p.font.size = Pt(26)
+            p.font.bold = True
+            p.font.color.rgb = COLOR_WHITE
 
-                # Text inside card
-                tx_box = slide.shapes.add_textbox(Inches(6.85), Inches(card_y + 0.08), Inches(5.5), Inches(card_height - 0.16))
-                tf_card = tx_box.text_frame
-                tf_card.word_wrap = True
-                tf_card.margin_left = Inches(0.05)
-                tf_card.margin_right = Inches(0.05)
-                tf_card.margin_top = Inches(0.05)
-                tf_card.margin_bottom = Inches(0.05)
+        # Split bullets into exposures (left) and policy benefits (right)
+        all_pts = s3_data.bullet_points if s3_data.bullet_points else [
+            "Prolonged sedentary screen time driving metabolic disorders",
+            "Ergonomic back and cervical strain requiring rehabilitation",
+            "Annual OPD check-up package with INR 10,000 sub-limit",
+            "Unlimited teleconsultations and AYUSH inpatient coverage",
+        ]
 
-                p_c = tf_card.paragraphs[0]
-                p_c.text = risk_bullets[i]
-                p_c.font.name = "Calibri"
-                p_c.font.size = Pt(12)
-                p_c.font.color.rgb = COLOR_NAVY
+        midpoint = max(1, len(all_pts) // 2)
+        left_pts = all_pts[:midpoint][:5]
+        right_pts = all_pts[midpoint:][:5]
 
-        # =====================================================================
-        # Slide 3: Strategic Policy Mapping
-        # =====================================================================
-        elif slide_data.slide_number == 3:
-            add_standard_header(slide, "Strategic Policy Mapping: Tailored Policy Provisions")
-
-            # Column Headers
-            left_col_title = slide.shapes.add_textbox(Inches(0.8), Inches(1.3), Inches(5.0), Inches(0.4))
-            tf_lct = left_col_title.text_frame
-            p_lct = tf_lct.paragraphs[0]
-            p_lct.text = "IDENTIFIED EXPOSURES"
-            p_lct.font.name = "Calibri"
-            p_lct.font.size = Pt(14)
-            p_lct.font.bold = True
-            p_lct.font.color.rgb = COLOR_SLATE
-
-            right_col_title = slide.shapes.add_textbox(Inches(7.5), Inches(1.3), Inches(5.0), Inches(0.4))
-            tf_rct = right_col_title.text_frame
-            p_rct = tf_rct.paragraphs[0]
-            p_rct.text = "MARSH POLICY SOLUTIONS"
-            p_rct.font.name = "Calibri"
-            p_rct.font.size = Pt(14)
-            p_rct.font.bold = True
-            p_rct.font.color.rgb = COLOR_CYAN
-
-            # VISUAL ELEMENT: Large RIGHT_ARROW in the center pointing from left to right
-            arrow_shape = slide.shapes.add_shape(
-                MSO_SHAPE.RIGHT_ARROW, Inches(6.05), Inches(3.2), Inches(1.2), Inches(1.0)
-            )
-            arrow_shape.fill.solid()
-            arrow_shape.fill.fore_color.rgb = COLOR_CYAN
-            arrow_shape.line.fill.background()
-
-            # Split bullets across Left (Exposures) and Right (Solutions)
-            all_pts = slide_data.bullet_points
-            midpoint = max(1, len(all_pts) // 2)
-            left_pts = all_pts[:midpoint]
-            right_pts = all_pts[midpoint:]
-
-            # Left Container Box
-            left_card = slide.shapes.add_shape(
-                MSO_SHAPE.ROUNDED_RECTANGLE, Inches(0.8), Inches(1.8), Inches(4.9), Inches(4.9)
-            )
-            left_card.fill.solid()
-            left_card.fill.fore_color.rgb = COLOR_LIGHT_GRAY
-            left_card.line.color.rgb = COLOR_BORDER
-            left_card.line.width = Pt(1)
-
-            tb_left = slide.shapes.add_textbox(Inches(1.0), Inches(2.0), Inches(4.5), Inches(4.5))
-            tf_l = tb_left.text_frame
-            tf_l.word_wrap = True
-            tf_l.margin_left = Inches(0.1)
-            tf_l.margin_top = Inches(0.1)
-            tf_l.margin_right = Inches(0.1)
-            tf_l.margin_bottom = Inches(0.1)
-
+        if "slide3_risk_column" in shapes:
+            tf = shapes["slide3_risk_column"].text_frame
+            tf.word_wrap = True
+            tf.text = ""
             for idx, pt in enumerate(left_pts):
-                p = tf_l.paragraphs[0] if idx == 0 else tf_l.add_paragraph()
-                p.text = f"•   {pt}"
-                p.font.name = "Calibri"
-                p.font.size = Pt(12)
-                p.font.color.rgb = COLOR_NAVY
-                p.space_after = Pt(12)
+                p = tf.paragraphs[0] if idx == 0 else tf.add_paragraph()
+                clean_pt = safe_truncate(pt, max_chars=130)
+                format_bullet_text(p, f"•  {clean_pt}", font_size_pt=11, text_color=COLOR_NAVY)
+                p.space_after = Pt(10)
 
-            # Right Container Box
-            right_card = slide.shapes.add_shape(
-                MSO_SHAPE.ROUNDED_RECTANGLE, Inches(7.5), Inches(1.8), Inches(5.0), Inches(4.9)
-            )
-            right_card.fill.solid()
-            right_card.fill.fore_color.rgb = COLOR_LIGHT_GRAY
-            right_card.line.color.rgb = COLOR_CYAN
-            right_card.line.width = Pt(1.5)
-
-            tb_right = slide.shapes.add_textbox(Inches(7.7), Inches(2.0), Inches(4.6), Inches(4.5))
-            tf_r = tb_right.text_frame
-            tf_r.word_wrap = True
-            tf_r.margin_left = Inches(0.1)
-            tf_r.margin_top = Inches(0.1)
-            tf_r.margin_right = Inches(0.1)
-            tf_r.margin_bottom = Inches(0.1)
-
+        if "slide3_benefit_column" in shapes:
+            tf = shapes["slide3_benefit_column"].text_frame
+            tf.word_wrap = True
+            tf.text = ""
             for idx, pt in enumerate(right_pts):
-                p = tf_r.paragraphs[0] if idx == 0 else tf_r.add_paragraph()
-                p.text = f"✔   {pt}"
-                p.font.name = "Calibri"
-                p.font.size = Pt(12)
-                p.font.color.rgb = COLOR_NAVY
-                p.space_after = Pt(12)
+                p = tf.paragraphs[0] if idx == 0 else tf.add_paragraph()
+                clean_pt = safe_truncate(pt, max_chars=130)
+                format_bullet_text(p, f"✔  {clean_pt}", font_size_pt=11, text_color=COLOR_NAVY)
+                p.space_after = Pt(10)
 
-        # =====================================================================
-        # Slide 4: Recommended Solution & Next Steps
-        # =====================================================================
-        elif slide_data.slide_number == 4:
-            add_standard_header(slide, "Recommended Placement & Implementation Roadmap")
+        # Speaker notes
+        notes = prs.slides[2].notes_slide.notes_text_frame
+        notes.text = f"[Marsh Broker Script - Policy Mapping]\n\n{s3_data.speaker_notes or 'Demonstrate how each policy clause directly offsets identified workforce health exposures.'}"
 
-            # TOP HALF: Large ROUNDED_RECTANGLE (Light Cyan fill, Navy border)
-            top_rec_box = slide.shapes.add_shape(
-                MSO_SHAPE.ROUNDED_RECTANGLE, Inches(0.8), Inches(1.4), Inches(11.73), Inches(3.4)
-            )
-            top_rec_box.fill.solid()
-            top_rec_box.fill.fore_color.rgb = COLOR_LIGHT_CYAN
-            top_rec_box.line.color.rgb = COLOR_NAVY
-            top_rec_box.line.width = Pt(1.5)
+    # -------------------------------------------------------------------------
+    # Slide 4: Recommended Policy & Next Steps
+    # -------------------------------------------------------------------------
+    if len(prs.slides) > 3:
+        shapes = slide_shapes_map[3]
+        if "slide4_title" in shapes:
+            tf = shapes["slide4_title"].text_frame
+            tf.word_wrap = True
+            p = tf.paragraphs[0]
+            p.text = s4_data.title or "Recommended Insurer Placement & Implementation Roadmap"
+            p.font.name = "Calibri"
+            p.font.size = Pt(26)
+            p.font.bold = True
+            p.font.color.rgb = COLOR_WHITE
 
-            # Text inside top recommendation container
-            tx_rec = slide.shapes.add_textbox(Inches(1.1), Inches(1.55), Inches(11.1), Inches(3.1))
-            tf_rec = tx_rec.text_frame
-            tf_rec.word_wrap = True
-            tf_rec.margin_left = Inches(0.1)
-            tf_rec.margin_top = Inches(0.1)
-            tf_rec.margin_right = Inches(0.1)
-            tf_rec.margin_bottom = Inches(0.1)
+        if "slide4_recommendation" in shapes:
+            tf = shapes["slide4_recommendation"].text_frame
+            tf.word_wrap = True
+            tf.text = ""
 
-            p_rt = tf_rec.paragraphs[0]
-            p_rt.text = f"RECOMMENDED POLICY PLACEMENT: {slide_data.title}"
-            p_rt.font.name = "Calibri"
-            p_rt.font.size = Pt(15)
-            p_rt.font.bold = True
-            p_rt.font.color.rgb = COLOR_NAVY
-            p_rt.space_after = Pt(8)
+            p_h = tf.paragraphs[0]
+            p_h.text = f"Primary Recommendation: Comprehensive Corporate Health Placement"
+            p_h.font.name = "Calibri"
+            p_h.font.size = Pt(13)
+            p_h.font.bold = True
+            p_h.font.color.rgb = COLOR_NAVY
+            p_h.space_after = Pt(6)
 
-            # Display all key bullet points from the final slide
-            top_bullets = slide_data.bullet_points if slide_data.bullet_points else ["Optimal deductible and premium ratio.", "Seamless network hospital integration.", "Day-one pre-existing condition waiver."]
-            for bp in top_bullets:
-                p_b = tf_rec.add_paragraph()
-                p_b.text = f"•  {bp}"
-                p_b.font.name = "Calibri"
-                p_b.font.size = Pt(12)
-                p_b.font.color.rgb = COLOR_NAVY
-                p_b.space_after = Pt(6)
-
-            # BOTTOM HALF: "Implementation Roadmap" with 3 CHEVRON shapes
-            rm_title_box = slide.shapes.add_textbox(Inches(0.8), Inches(5.0), Inches(11.73), Inches(0.4))
-            tf_rmt = rm_title_box.text_frame
-            p_rmt = tf_rmt.paragraphs[0]
-            p_rmt.text = "IMPLEMENTATION ROADMAP"
-            p_rmt.font.name = "Calibri"
-            p_rmt.font.size = Pt(13)
-            p_rmt.font.bold = True
-            p_rmt.font.color.rgb = COLOR_SLATE
-
-            # 3 CHEVRON shapes horizontally across the bottom (Cyan, Navy, Slate)
-            chevron_data = [
-                ("1. Needs Analysis", COLOR_CYAN, COLOR_WHITE),
-                ("2. Market Placement", COLOR_NAVY, COLOR_WHITE),
-                ("3. Policy Binding", COLOR_SLATE, COLOR_WHITE),
+            rec_bullets = s4_data.bullet_points if s4_data.bullet_points else [
+                "Placement with premier insurers (Care Health / HDFC ERGO) offering 10,000+ cashless network hospitals.",
+                "Day-one pre-existing disease waivers with zero copay for employees and dependents.",
+                "Sum insured auto-restoration ensuring full coverage replenishment across multi-event claim years.",
             ]
 
-            ch_w = Inches(3.7)
-            ch_h = Inches(1.1)
-            gap_ch = Inches(0.3)
-            start_x = Inches(0.8)
+            # Max 4 key reasons
+            for r_bp in rec_bullets[:4]:
+                p = tf.add_paragraph()
+                clean_bp = safe_truncate(r_bp, max_chars=145)
+                format_bullet_text(p, f"•  {clean_bp}", font_size_pt=11, text_color=COLOR_NAVY)
+                p.space_after = Pt(5)
 
-            for idx, (label, bg_col, text_col) in enumerate(chevron_data):
-                curr_x = start_x + (idx * (ch_w + gap_ch))
-                ch_shape = slide.shapes.add_shape(
-                    MSO_SHAPE.CHEVRON, curr_x, Inches(5.5), ch_w, ch_h
-                )
-                ch_shape.fill.solid()
-                ch_shape.fill.fore_color.rgb = bg_col
-                ch_shape.line.fill.background()
+        if "slide4_next_steps" in shapes:
+            tf = shapes["slide4_next_steps"].text_frame
+            tf.word_wrap = True
+            tf.text = ""
 
-                tf_ch = ch_shape.text_frame
-                tf_ch.word_wrap = True
-                tf_ch.margin_left = Inches(0.3)
-                p_c = tf_ch.paragraphs[0]
-                p_c.text = label
-                p_c.font.name = "Calibri"
-                p_c.font.size = Pt(16)
-                p_c.font.bold = True
-                p_c.font.color.rgb = text_col
-                p_c.alignment = PP_ALIGN.CENTER
+            p_steps = tf.paragraphs[0]
+            steps = [
+                ("Phase 1: Requirement Validation", "Finalize corporate census data, sum insured bands, and customized waiver clauses."),
+                ("Phase 2: Custom Quotation", "Negotiate bespoke group rates with top underwriters via Marsh competitive bidding."),
+                ("Phase 3: Broker Presentation", "Present comparative term sheets and stewardship service level agreements (SLAs)."),
+                ("Phase 4: Policy Placement", "Bind policy, issue digital e-cards, and launch employee cashless orientation townhalls."),
+            ]
+            for idx, (title, desc) in enumerate(steps):
+                p = tf.paragraphs[0] if idx == 0 else tf.add_paragraph()
+                run_t = p.add_run()
+                run_t.text = f"{title}: "
+                run_t.font.name = "Calibri"
+                run_t.font.size = Pt(10.5)
+                run_t.font.bold = True
+                run_t.font.color.rgb = COLOR_NAVY
 
-        # Speaker notes added cleanly
-        notes_slide = slide.notes_slide
-        tf_notes = notes_slide.notes_text_frame
-        tf_notes.text = f"[Marsh Broker Presentation Script]\n\n{slide_data.speaker_notes}"
+                run_d = p.add_run()
+                run_d.text = f"{desc}  "
+                run_d.font.name = "Calibri"
+                run_d.font.size = Pt(10)
+                run_d.font.color.rgb = COLOR_SLATE
+                p.space_after = Pt(2)
 
-    prs.save(output_path)
-    logger.info(f"Consulting-grade presentation saved successfully to: {Path(output_path).resolve()}")
-    return output_path
+        # Speaker notes
+        notes = prs.slides[3].notes_slide.notes_text_frame
+        notes.text = f"[Marsh Broker Script - Recommendation & Next Steps]\n\n{s4_data.speaker_notes or 'Close the meeting by establishing clear milestone dates for quote negotiations and binding.'}"
+
+    out_p = Path(output_path)
+    out_p.parent.mkdir(parents=True, exist_ok=True)
+    prs.save(str(out_p))
+    logger.info(f"Consulting-grade PowerPoint saved successfully to: {out_p.resolve()}")
+    return str(out_p)
 
 
 # =============================================================================

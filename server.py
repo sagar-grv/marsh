@@ -500,7 +500,7 @@ def generate_pitch(req: GenerateRequest):
         pdf_path = OUTPUTS_DIR / pdf_filename
 
         # Render 16:9 McKinsey/Marsh PPTX
-        export_to_pptx(pitch_deck, output_path=str(pptx_path))
+        export_to_pptx(pitch_deck, output_path=str(pptx_path), profile=profile)
 
         # Render CSV
         csv_content = generate_audit_csv(audit_report, company_name)
